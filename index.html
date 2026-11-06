@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的熱量缺口</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f4f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2 { text-align: center; }
+        .deficit-board { background: #28a745; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+        .deficit-board h1 { margin: 0; font-size: 2.5em; }
+        .card { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 18px; margin-top: 20px; cursor: pointer; }
+        button:active { background: #0056b3; }
+        .tdee-display { font-size: 1.2em; font-weight: bold; color: #d9534f; text-align: center; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="deficit-board">
+            <div>總累計熱量缺口</div>
+            <h1 id="total-deficit">0</h1>
+            <div>大卡</div>
+        </div>
+
+        <div class="card">
+            <h2>身體數值 (計算 TDEE)</h2>
+            <div class="tdee-display">今日消耗 (TDEE): <span id="tdee-value">0</span> 大卡</div>
+            <label>性別:</label>
+            <select id="gender"><option value="M">男</option><option value="F">女</option></select>
+            <label>年齡:</label><input type="number" id="age" value="25">
+            <label>身高 (cm):</label><input type="number" id="height" value="170">
+            <label>體重 (kg):</label><input type="number" id="weight" value="70">
+            <label>活動量:</label>
+            <select id="activity">
+                <option value="1.2">久坐 (幾乎不運動)</option>
+                <option value="1.375">輕度活動 (每週運動1-3天)</option>
+                <option value="1.55">中度活動 (每週運動3-5天)</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <h2>今日紀錄</h2>
+            <label>日期:</label><input type="date" id="date">
+            <label>早餐攝取 (大卡):</label><input type="number" id="breakfast" value="0">
+            <label>午餐攝取 (大卡):</label><input type="number" id="lunch" value="0">
+            <label>晚餐攝取 (大卡):</label><input type="number" id="dinner" value="0">
+            <label>運動消耗額外熱量 (大卡):</label><input type="number" id="exercise" value="0">
+            <button onclick="saveData()">儲存紀錄</button>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>資料備份與還原</h2>
+            <p style="font-size: 0.9em; color: #666;">換手機或重新安裝前，請先匯出備份檔。</p>
+            <button onclick="exportData()" style="background: #28a745; margin-top: 10px;">⬇️ 匯出備份 (下載檔案)</button>
+            
+            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
+            <button onclick="document.getElementById('importFile').click()" style="background: #ffc107; color: black; margin-top: 10px;">⬆️ 匯入備份 (讀取檔案)</button>
+        </div>
+    </div>
+
+    <script>
+        // 註冊 Service Worker (PWA 必備)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        const dateInput = document.getElementById('date');
+        const inputs = ['gender', 'age', 'height', 'weight', 'activity', 'breakfast', 'lunch', 'dinner', 'exercise'];
+        
+        // 初始化日期為今日
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+
+        // 計算並顯示 TDEE
+        function calculateTDEE() {
+            const gender = document.getElementById('gender').value;
+            const age = parseFloat(document.getElementById('age').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const weight = parseFloat(document.getElementById('weight').value) || 0;
+            const activity = parseFloat(document.getElementById('activity').value) || 1.2;
+            
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+            bmr += (gender === 'M') ? 5 : -161;
+            
+            const tdee = Math.round(bmr * activity);
+            document.getElementById('tdee-value').innerText = tdee > 0 ? tdee : 0;
+            return tdee > 0 ? tdee : 0;
+        }
+
+        // 載入資料
+        function loadData() {
+            // 載入個人資料
+            inputs.slice(0, 5).forEach(id => {
+                if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id);
+            });
+            
+            // 載入當日紀錄
+            const currentRecord = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0 };
+            document.getElementById('breakfast').value = currentRecord.breakfast;
+            document.getElementById('lunch').value = currentRecord.lunch;
+            document.getElementById('dinner').value = currentRecord.dinner;
+            document.getElementById('exercise').value = currentRecord.exercise;
+
+            calculateTDEE();
+            updateTotalDeficit();
+        }
+
+        // 儲存資料
+        function saveData() {
+            // 存個人資料
+            inputs.slice(0, 5).forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+            
+            const tdee = calculateTDEE();
+            const record = {
+                breakfast: parseFloat(document.getElementById('breakfast').value) || 0,
+                lunch: parseFloat(document.getElementById('lunch').value) || 0,
+                dinner: parseFloat(document.getElementById('dinner').value) || 0,
+                exercise: parseFloat(document.getElementById('exercise').value) || 0,
+                tdee: tdee
+            };
+            
+            // 單日熱量缺口 = (TDEE + 運動) - (早 + 午 + 晚)
+            record.deficit = (record.tdee + record.exercise) - (record.breakfast + record.lunch + record.dinner);
+            localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
+            
+            updateTotalDeficit();
+            alert("紀錄已儲存！");
+        }
+
+        // 計算總累計缺口
+        function updateTotalDeficit() {
+            let total = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('record_')) {
+                    const record = JSON.parse(localStorage.getItem(key));
+                    total += record.deficit || 0;
+                }
+            }
+            document.getElementById('total-deficit').innerText = total;
+        }
+
+        // 監聽變更，即時更新
+        inputs.slice(0, 5).forEach(id => document.getElementById(id).addEventListener('input', calculateTDEE));
+        dateInput.addEventListener('change', loadData);
+
+        window.onload = loadData;
+
+        // 匯出資料：將 localStorage 打包成 JSON 檔案下載
+        function exportData() {
+            if (localStorage.length === 0) {
+                alert("目前沒有資料可以匯出！");
+                return;
+            }
+            const data = JSON.stringify(localStorage);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            // 設定下載的檔名，會加上今天的日期
+            a.download = `熱量紀錄備份_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 匯入資料：讀取 JSON 檔案並覆蓋回 localStorage
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // 清空現有資料，寫入新資料
+                    localStorage.clear();
+                    for (let key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                    
+                    alert("資料還原成功！畫面將重新載入。");
+                    loadData(); // 重新載入畫面資料
+                    // 清空 input 讓下次可以選同一個檔案
+                    event.target.value = ''; 
+                } catch (error) {
+                    alert("檔案格式錯誤，匯入失敗！");
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
