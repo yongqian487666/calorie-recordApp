@@ -49,36 +49,18 @@
 
         /* --- 讀取畫面 Loader (腳印動畫) --- */
         #loading-overlay {
-            display: none; 
-            position: fixed; 
-            top: 75px; /* 閃過頂部 Header */
-            left: 0; 
-            right: 0; 
-            bottom: 75px; /* 閃過底部導覽列 */
-            background: var(--bg-color); 
-            z-index: 50; 
-            align-items: center; 
-            justify-content: center;
+            display: none; position: fixed; top: 75px; left: 0; right: 0; bottom: 75px;
+            background: var(--bg-color); z-index: 50; align-items: center; justify-content: center;
         }
         .loader {
-            width: calc(6*30px);
-            height: 50px;
-            display: flex;
-            color: var(--accent-color); /* 自動跟隨系統暖色系/深色系重點色 */
+            width: calc(6*30px); height: 50px; display: flex; color: var(--accent-color);
             filter: drop-shadow(30px 25px 0 currentColor) drop-shadow(60px 0 0 currentColor) drop-shadow(120px 0 0 currentColor);
             clip-path: inset(0 100% 0 0);
-            animation: l12 0.8s infinite steps(7); /* 調快速度以適應 0.25 秒的短暫切換 */
+            animation: l12 0.5s infinite steps(7); /* 剛好0.5秒跑完完整一步腳印循環 */
         }
         .loader:before {
-            content: "";
-            width: 30px;
-            height: 25px;
-            --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000);
-            background: 
-                var(--c) left /70% 70%,
-                var(--c) right/20% 20%,
-                var(--c) top    0 right 15%/20% 20%,
-                var(--c) bottom 0 right 15%/20% 20%;
+            content: ""; width: 30px; height: 25px; --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000);
+            background: var(--c) left /70% 70%, var(--c) right/20% 20%, var(--c) top 0 right 15%/20% 20%, var(--c) bottom 0 right 15%/20% 20%;
         }
         @keyframes l12 { 100% {clip-path: inset(0 -30px 0 0)} }
 
@@ -88,8 +70,6 @@
         .greeting-container { position: relative; display: flex; align-items: center; gap: 8px; }
         .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; }
         .greeting-container h1:active { opacity: 0.6; }
-        
-        .streak-badge { background: #d9534f; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; box-shadow: 0 2px 5px rgba(217,83,79,0.3); }
         
         .quote-bubble {
             position: absolute; top: 120%; left: 0; background: var(--accent-color); color: white; padding: 10px 15px; border-radius: 16px; border-top-left-radius: 0;
@@ -181,8 +161,7 @@
 
     <div class="global-header">
         <div class="greeting-container">
-            <h1 id="greeting" onclick="showRandomQuote()">晚安 <span style="font-size: 0.8em; margin-left: 2px;">💬</span></h1>
-            <div id="streak-badge" class="streak-badge">🔥 連續 0 天</div>
+            <h1 id="greeting" onclick="showRandomQuote()">晚安</h1>
             <div id="quote-bubble" class="quote-bubble"></div>
         </div>
         <div class="date-control">
@@ -212,7 +191,8 @@
                 <label class="lang-txt" data-zh="年齡" data-en="Age">年齡</label><input type="number" id="age" value="22">
                 <label class="lang-txt" data-zh="身高 (cm)" data-en="Height (cm)">身高 (cm)</label><input type="number" id="height" value="173">
                 <label class="lang-txt" data-zh="體重 (kg)" data-en="Weight (kg)">體重 (kg)</label><input type="number" id="weight" value="67">
-                <label class="lang-txt" data-zh="體脂率 (%)" data-en="Body Fat (%)">體脂率 (%)</label><input type="number" id="bodyfat" value="" placeholder="選填 (有量再填)">
+                <label class="lang-txt" data-zh="體脂率 (%)" data-en="Body Fat (%)">體脂率 (%)</label>
+                <input type="number" id="bodyfat" value="" data-zh-ph="選填 (有量再填)" data-en-ph="Optional" placeholder="選填 (有量再填)">
                 <label class="lang-txt" data-zh="活動係數" data-en="Activity Level">活動係數</label>
                 <select id="activity">
                     <option value="1.2" class="lang-txt" data-zh="久坐 (幾乎不運動)" data-en="Sedentary">久坐 (幾乎不運動)</option>
@@ -429,6 +409,8 @@
             const lang = document.getElementById('lang-select').value;
             localStorage.setItem('app_lang', lang);
             applyLanguage(lang);
+            setGreeting(); 
+            renderPresets(); 
             loadData();
         }
 
@@ -436,6 +418,10 @@
             document.querySelectorAll('.lang-txt').forEach(el => {
                 const txt = el.getAttribute('data-' + lang);
                 if(txt) el.innerText = txt;
+            });
+            document.querySelectorAll('[data-zh-ph]').forEach(el => {
+                const ph = el.getAttribute('data-' + lang + '-ph');
+                if(ph) el.placeholder = ph;
             });
         }
 
@@ -503,7 +489,8 @@
             } else {
                 if(hour < 11) text = "早安"; else if(hour < 17) text = "午安";
             }
-            greetingEl.innerHTML = text + ' <span style="font-size: 0.8em; margin-left: 2px;">💬</span>';
+            // 移除 Emoji，只保留文字
+            greetingEl.innerText = text;
         }
 
         const quotes = {
@@ -528,20 +515,20 @@
             dateInput.dispatchEvent(new Event('change'));
         }
 
-        // --- 0.25秒 貓咪腳印讀取切換 ---
+        // --- 0.5秒 貓咪腳印讀取切換 ---
         function switchTab(tabId) {
             const overlay = document.getElementById('loading-overlay');
-            overlay.style.display = 'flex'; // 顯示讀取動畫遮罩
+            overlay.style.display = 'flex';
             
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item, .nav-center').forEach(nav => nav.classList.remove('active'));
             document.getElementById('nav-' + tabId).classList.add('active');
 
             setTimeout(() => {
-                overlay.style.display = 'none'; // 隱藏遮罩
+                overlay.style.display = 'none';
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(tabId === 'analysis') { renderAnalysisCharts(); }
-            }, 250); // 0.25 秒
+            }, 500); // 延長到 0.5 秒讓腳印完整顯示
         }
 
         function calculateBaseMetrics() {
@@ -676,30 +663,6 @@
             }
         }
 
-        function updateStreak() {
-            let streak = 0;
-            let d = new Date();
-            const todayStr = getLocalISODate(d);
-            
-            const todayRec = JSON.parse(localStorage.getItem('record_' + todayStr));
-            const todayHasRecord = todayRec && (todayRec.isCheatDay || (todayRec.breakfast||0) + (todayRec.lunch||0) + (todayRec.dinner||0) > 0);
-            
-            if (todayHasRecord) streak = 1;
-            else d.setDate(d.getDate() - 1); 
-
-            while(true) {
-                const checkStr = getLocalISODate(d);
-                if(todayHasRecord && checkStr === todayStr) { d.setDate(d.getDate() - 1); continue; }
-                const rec = JSON.parse(localStorage.getItem('record_' + checkStr));
-                if (rec && (rec.isCheatDay || (rec.breakfast||0) + (rec.lunch||0) + (rec.dinner||0) > 0)) {
-                    streak++;
-                    d.setDate(d.getDate() - 1);
-                } else { break; }
-            }
-            const text = getLang() === 'zh' ? `🔥 連續 ${streak} 天` : `🔥 ${streak} Day Streak`;
-            document.getElementById('streak-badge').innerText = text;
-        }
-
         function loadData() {
             profileInputs.forEach(id => { if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id); });
             
@@ -745,7 +708,6 @@
                 updateDashboard(currentRecord, metrics);
             }
             updateTotalDeficit();
-            updateStreak();
         }
 
         function updateDashboard(record, metrics) {
