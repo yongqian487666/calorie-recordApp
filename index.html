@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
-        /* 預設淺色模式 (暖色系) */
+        /* 淺色模式變數 */
         :root {
             --bg-color: #f7f3e8;       
             --card-bg: #ece3d1;        
@@ -18,7 +18,8 @@
             --accent-color: #c86b3c;   
             --accent-sub: #a38f7b;     
             --ring-empty: #dcd1be;     
-            --border-color: #dfd5c4;   
+            --border-color: #dfd5c4;
+            --input-bg: #faf6f0;   
         }
 
         /* 深色模式變數 */
@@ -30,11 +31,12 @@
             --accent-color: #c86b3c;   
             --accent-sub: #8b6b55;     
             --ring-empty: #524a43;     
-            --border-color: #4a423a;   
+            --border-color: #5c534a;
+            --input-bg: #221e1c;   
         }
 
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; transition: background-color 0.3s, color 0.3s; }
+        * { -ms-overflow-style: none; scrollbar-width: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
 
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -48,20 +50,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- 讀取畫面 Loader (腳印動畫) --- */
-        #loading-overlay {
-            display: none; position: fixed; top: 75px; left: 0; right: 0; bottom: 75px;
-            background: var(--bg-color); z-index: 50; align-items: center; justify-content: center;
-        }
-        .loader {
-            width: calc(6*30px); height: 50px; display: flex; color: var(--accent-color);
-            filter: drop-shadow(30px 25px 0 currentColor) drop-shadow(60px 0 0 currentColor) drop-shadow(120px 0 0 currentColor);
-            clip-path: inset(0 100% 0 0);
-            animation: l12 0.5s infinite steps(7); /* 剛好0.5秒跑完完整一步腳印循環 */
-        }
-        .loader:before {
-            content: ""; width: 30px; height: 25px; --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000);
-            background: var(--c) left /70% 70%, var(--c) right/20% 20%, var(--c) top 0 right 15%/20% 20%, var(--c) bottom 0 right 15%/20% 20%;
-        }
+        #loading-overlay { display: none; position: fixed; top: 75px; left: 0; right: 0; bottom: 75px; background: var(--bg-color); z-index: 50; align-items: center; justify-content: center; }
+        .loader { width: calc(6*30px); height: 50px; display: flex; color: var(--accent-color); filter: drop-shadow(30px 25px 0 currentColor) drop-shadow(60px 0 0 currentColor) drop-shadow(120px 0 0 currentColor); clip-path: inset(0 100% 0 0); animation: l12 0.5s infinite steps(7); }
+        .loader:before { content: ""; width: 30px; height: 25px; --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000); background: var(--c) left /70% 70%, var(--c) right/20% 20%, var(--c) top 0 right 15%/20% 20%, var(--c) bottom 0 right 15%/20% 20%; }
         @keyframes l12 { 100% {clip-path: inset(0 -30px 0 0)} }
 
         /* 頂部 Header 與 泡泡提示 */
@@ -71,18 +62,31 @@
         .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; }
         .greeting-container h1:active { opacity: 0.6; }
         
+        /* 泡泡動畫 */
+        @keyframes bubbleBounce {
+            0% { transform: translateY(10px) scale(0.9); opacity: 0; }
+            50% { transform: translateY(-5px) scale(1.05); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
         .quote-bubble {
             position: absolute; top: 120%; left: 0; background: var(--accent-color); color: white; padding: 10px 15px; border-radius: 16px; border-top-left-radius: 0;
             font-size: 0.9em; font-weight: bold; line-height: 1.4; width: max-content; max-width: 250px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
+            display: none; z-index: 100;
         }
-        .quote-bubble.show { opacity: 1; visibility: visible; transform: translateY(0); }
+        .quote-bubble.show { display: block; animation: bubbleBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        /* 狀態提示泡泡 */
+        .status-bubble {
+            position: absolute; top: 120%; left: 0; background: var(--text-main); color: var(--bg-color); padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0;
+            font-size: 0.85em; font-weight: bold; width: max-content; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: none; z-index: 100;
+        }
+        .status-bubble.show { display: block; animation: bubbleBounce 0.3s ease-out forwards; }
 
         .date-control { display: flex; align-items: center; justify-content: center; }
         .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
         .date-nav-btn:active { opacity: 0.5; }
-        .date-picker { background: transparent; border: none; font-size: 16px; color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none; text-align: center; text-align-last: center; width: 135px; }
-
+        .custom-date-btn { background: transparent; border: none; font-size: 16px; color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none; text-align: center; width: 105px; cursor: pointer; }
+        
         .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
 
         .deficits-wrapper { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -98,7 +102,18 @@
         .ring-chart::before { content: ""; width: 76px; height: 76px; background: var(--card-bg); border-radius: 50%; }
         
         .dashboard-info { display: flex; flex-direction: column; justify-content: center; }
-        .dashboard-info .text-top { margin: 0; font-size: 1.2em; font-weight: bold; color: var(--text-main); }
+        
+        /* 輕微晃動動畫 */
+        @keyframes slightJiggle {
+            0%, 90% { transform: rotate(0deg); }
+            92% { transform: rotate(-2deg); }
+            94% { transform: rotate(2deg); }
+            96% { transform: rotate(-2deg); }
+            98% { transform: rotate(2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .dashboard-info .text-top { margin: 0; font-size: 1.2em; font-weight: bold; color: var(--text-main); display: inline-block; animation: slightJiggle 4s infinite; transform-origin: left center; }
+        
         .dashboard-info h2 { margin: 5px 0; font-size: 2.8em; font-weight: 900; color: var(--text-main); line-height: 1; }
         .dashboard-info .text-bottom { margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: var(--text-sub); }
 
@@ -114,8 +129,22 @@
         .macro-row { display: flex; justify-content: space-between; padding: 15px 0 0 0; font-size: 0.95em; font-weight: bold; }
         
         .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .range-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-weight: bold; outline: none; }
+        
+        /* 自訂分析區間按鈕 */
+        .custom-range-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+        .custom-range-btn:active { opacity: 0.7; }
+
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
+
+        /* Q&A 手風琴 */
+        .qa-container { margin-top: 25px; border-top: 1px dashed var(--border-color); padding-top: 15px; }
+        .qa-item { border-bottom: 1px solid var(--border-color); }
+        .qa-item:last-child { border-bottom: none; }
+        .qa-header { padding: 12px 0; font-weight: bold; color: var(--text-main); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.95em; }
+        .qa-icon { font-size: 0.8em; transition: transform 0.3s; color: var(--accent-color); }
+        .qa-item.active .qa-icon { transform: rotate(180deg); }
+        .qa-body { display: none; padding-bottom: 12px; color: var(--text-sub); font-size: 0.9em; line-height: 1.5; }
+        .qa-item.active .qa-body { display: block; }
 
         /* 全域 Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
@@ -125,21 +154,30 @@
         .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; text-align: center; width: 100%; }
         .modal-header.has-close h3 { text-align: left; }
         .close-btn { background: none; border: none; font-size: 1.5em; color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1; }
+        
         .history-list { overflow-y: auto; flex: 1; padding-right: 5px; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: bold; }
         .history-item:last-child { border-bottom: none; }
         .history-deficit { color: var(--accent-color); }
         .history-deficit.negative { color: #d9534f; }
 
+        /* 自訂日曆 Grid */
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; margin-top: 10px; }
+        .cal-day-name { font-size: 0.8em; color: var(--text-sub); font-weight: bold; margin-bottom: 5px; }
+        .cal-cell { padding: 10px 0; border-radius: 8px; cursor: pointer; color: var(--text-main); font-weight: bold; font-size: 0.9em; }
+        .cal-cell:hover { background: var(--border-color); }
+        .cal-cell.empty { background: transparent; cursor: default; }
+        .cal-cell.today { background: var(--accent-sub); color: white; }
+        .cal-cell.selected { background: var(--accent-color); color: white; }
+
         /* 表單與按鈕 */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--bg-color); color: var(--text-main); }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
         input:focus, select:focus { outline: none; border-color: var(--accent-color); }
         button.btn-primary { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button.btn-secondary { width: 100%; padding: 16px; background: var(--ring-empty); color: var(--text-main); border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
         button.btn-danger { width: 100%; padding: 16px; background: #d9534f; color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
 
-        /* 快捷鍵 */
         .preset-section { margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px; }
         .preset-title { font-size: 1em; color: var(--text-main); margin: 0 0 10px 0; }
         .chip-container { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -148,7 +186,14 @@
         .chip-delete { background: var(--border-color); color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px; line-height: 1; margin-left: 4px; padding-bottom: 2px; box-sizing: border-box; }
         .chip-add { background: transparent; border: 1px dashed var(--accent-color); color: var(--accent-color); }
 
-        /* 底部導覽列 */
+        /* 暱稱與狀態區塊 */
+        .profile-row { display: flex; gap: 15px; align-items: center; margin-bottom: 10px; }
+        .profile-col { flex: 1; }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 8px; font-size: 0.85em; font-weight: bold; color: white; cursor: pointer; margin-top: 5px; text-align: center; width: max-content;}
+        .status-active { background: #5e726b; }
+        .status-normal { background: var(--accent-sub); }
+        .status-lazy { background: #d9534f; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 100; height: 75px; box-sizing: border-box; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); background: none; border: none; font-size: 0.8em; cursor: pointer; padding: 5px 15px; }
         .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
@@ -159,6 +204,9 @@
 </head>
 <body data-theme="light">
 
+    <!-- 實際隱藏的 date input 用於存儲邏輯資料 -->
+    <input type="date" id="date" style="display:none;">
+
     <div class="global-header">
         <div class="greeting-container">
             <h1 id="greeting" onclick="showRandomQuote()">晚安</h1>
@@ -166,15 +214,13 @@
         </div>
         <div class="date-control">
             <button class="date-nav-btn" onclick="changeDate(-1)">❮</button>
-            <input type="date" id="date" class="date-picker">
+            <button class="custom-date-btn" id="custom-date-display" onclick="openCalendarModal()">2026/11/07</button>
             <button class="date-nav-btn" onclick="changeDate(1)">❯</button>
         </div>
     </div>
 
     <!-- 腳印讀取遮罩層 -->
-    <div id="loading-overlay">
-        <div class="loader"></div>
-    </div>
+    <div id="loading-overlay"><div class="loader"></div></div>
 
     <div class="container">
         <!-- 第1頁：身體 -->
@@ -286,12 +332,12 @@
         <div id="page-analysis" class="page">
             <div class="analysis-header">
                 <h2 style="margin:0;" class="lang-txt" data-zh="趨勢分析" data-en="Analytics">趨勢分析</h2>
-                <select id="analysis-range" class="range-select" onchange="renderAnalysisCharts()">
-                    <option value="7" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</option>
-                    <option value="30" class="lang-txt" data-zh="近一個月" data-en="Last 30 Days">近一個月</option>
-                    <option value="180" class="lang-txt" data-zh="近半年" data-en="Last 6 Months">近半年</option>
-                    <option value="365" class="lang-txt" data-zh="近一年" data-en="Last Year">近一年</option>
-                </select>
+                <!-- 隱藏原生select，用自訂按鈕 -->
+                <input type="hidden" id="analysis-range" value="7">
+                <button class="custom-range-btn" onclick="openRangeModal()">
+                    <span id="range-display" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</span>
+                    <span style="font-size: 0.8em; margin-left: 5px;">▼</span>
+                </button>
             </div>
             
             <div class="card">
@@ -316,6 +362,19 @@
             <h2 style="margin-top:0;" class="lang-txt" data-zh="設定" data-en="Settings">設定</h2>
             
             <div class="card">
+                <!-- 稱呼與狀態 -->
+                <div class="profile-row">
+                    <div class="profile-col" style="position: relative;">
+                        <label style="margin-top:0;" class="lang-txt" data-zh="暱稱 / Nickname" data-en="Nickname">暱稱 / Nickname</label>
+                        <input type="text" id="nickname" onchange="updateNickname()" style="margin-bottom:10px;">
+                    </div>
+                    <div class="profile-col" style="position: relative; text-align: right;">
+                        <label style="margin-top:0;" class="lang-txt" data-zh="狀態" data-en="Status">狀態</label>
+                        <div id="user-status" class="status-badge status-normal" onclick="showStatusTooltip()">普通</div>
+                        <div id="status-bubble" class="status-bubble">資訊來自近期趨勢</div>
+                    </div>
+                </div>
+
                 <label class="lang-txt" data-zh="語言 / Language" data-en="Language">語言 / Language</label>
                 <select id="lang-select" onchange="changeLanguage()">
                     <option value="zh">繁體中文</option>
@@ -335,18 +394,52 @@
                 <button class="btn-primary lang-txt" onclick="exportData()" data-zh="匯出備份" data-en="Export Data">匯出備份</button>
                 <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
                 <button class="btn-secondary lang-txt" style="margin-top: 15px;" onclick="document.getElementById('importFile').click()" data-zh="匯入備份" data-en="Import Data">匯入備份</button>
+                
+                <!-- Q&A 手風琴 -->
+                <div class="qa-container">
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.1em;" class="lang-txt" data-zh="常見問題 Q&A" data-en="FAQ">常見問題 Q&A</h3>
+                    
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="1. 如何更改當日攝取與消耗？" data-en="1. How to edit daily records?">1. 如何更改當日攝取與消耗？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="點擊頂部日曆切換到該日期，直接修改數字並按「儲存紀錄」即可覆蓋。" data-en="Select the date from the top calendar, edit numbers, and hit Save.">點擊頂部日曆切換到該日期，直接修改數字並按「儲存紀錄」即可覆蓋。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="2. 今日放縱日是什麽？" data-en="2. What is Cheat Day?">2. 今日放縱日是什麽？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="暫停一天熱量計算，讓自己好好休息，不會影響平均數據。" data-en="Pauses calorie counting for the day to let you rest without affecting averages.">暫停一天熱量計算，讓自己好好休息，不會影響平均數據。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="3. 我要如何算熱量和蛋白質？" data-en="3. How to count calories & protein?">3. 我要如何算熱量和蛋白質？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="可參考食品包裝標示，或使用網上食物資料庫粗估。" data-en="Check food labels or use online food databases for rough estimates.">可參考食品包裝標示，或使用網上食物資料庫粗估。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="4. 需要盡量天天更新體重嗎？" data-en="4. Do I need to update weight daily?">4. 需要盡量天天更新體重嗎？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="不用！只要有量的時候在「身體」頁面更新，系統會自動抓取最新數值。" data-en="No! Update it in the Body tab only when you weigh yourself.">不用！只要有量的時候在「身體」頁面更新，系統會自動抓取最新數值。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="5. 體脂率怎麽更新？" data-en="5. How to update body fat?">5. 體脂率怎麽更新？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="與體重一樣，有測量時在「身體」頁面輸入並儲存即可。" data-en="Same as weight, enter it in the Body tab when measured.">與體重一樣，有測量時在「身體」頁面輸入並儲存即可。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="6. 換手機記得匯出備份！" data-en="6. Export backup before switching phones!">6. 換手機記得匯出備份！</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="沒錯！資料都存在本機，換裝置前請務必到「設定」匯出備份檔。" data-en="Data is local! Always export backup in Settings before switching devices.">沒錯！資料都存在本機，換裝置前請務必到「設定」匯出備份檔。</div>
+                    </div>
+                    <div class="qa-item" onclick="toggleQA(this)">
+                        <div class="qa-header"><span class="lang-txt" data-zh="7. 怎樣看分析表減脂才有效？" data-en="7. How to read analytics for fat loss?">7. 怎樣看分析表減脂才有效？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="若「體重曲線」隨「熱量缺口」穩定下降即為有效。蛋白質達標能確保減掉的是脂肪。" data-en="Effective if weight drops along with a calorie deficit. Hitting protein goals ensures fat loss.">若「體重曲線」隨「熱量缺口」穩定下降即為有效。蛋白質達標能確保減掉的是脂肪。</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 自訂提示視窗 -->
+    <!-- 自訂提示與日曆 Modal -->
     <div class="modal-overlay" id="customModalOverlay" onclick="closeCustomModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header" id="customModalHeader">
                 <h3 id="customModalTitle">提示</h3>
                 <button class="close-btn" id="customModalCloseBtn" onclick="closeCustomModal()">×</button>
             </div>
-            <div id="customModalBody" style="color: var(--text-sub); margin-bottom: 20px; line-height: 1.5;"></div>
+            <div id="customModalBody" style="color: var(--text-main); margin-bottom: 20px; line-height: 1.5;"></div>
             <div id="customModalFooter" style="display: flex; gap: 10px; flex-direction: column;"></div>
         </div>
     </div>
@@ -385,7 +478,7 @@
         let pieChartInst = null, calLineChartInst = null, proLineChartInst = null, weightLineChartInst = null;
         let mealPresets = JSON.parse(localStorage.getItem('meal_presets')) || [];
         let exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
-        let quoteTimeout = null;
+        let quoteTimeout = null, statusTimeout = null;
 
         // --- 外觀與語言設定邏輯 ---
         function initSettings() {
@@ -410,7 +503,9 @@
             localStorage.setItem('app_lang', lang);
             applyLanguage(lang);
             setGreeting(); 
-            renderPresets(); 
+            renderPresets();
+            updateNicknameUI();
+            updateStatusUI(); 
             loadData();
         }
 
@@ -423,6 +518,12 @@
                 const ph = el.getAttribute('data-' + lang + '-ph');
                 if(ph) el.placeholder = ph;
             });
+            // 更新自訂按鈕顯示
+            document.getElementById('custom-date-display').innerText = dateInput.value.replace(/-/g, '/');
+            const rVal = document.getElementById('analysis-range').value;
+            const rTextZh = rVal=='7'?'近 7 日':rVal=='30'?'近一個月':rVal=='180'?'近半年':'近一年';
+            const rTextEn = rVal=='7'?'Last 7 Days':rVal=='30'?'Last 30 Days':rVal=='180'?'Last 6 Months':'Last Year';
+            document.getElementById('range-display').innerText = lang === 'zh' ? rTextZh : rTextEn;
         }
 
         function getLang() { return localStorage.getItem('app_lang') || 'zh'; }
@@ -465,11 +566,151 @@
             });
         }
 
+        // --- 暱稱與狀態 ---
+        function updateNickname() {
+            localStorage.setItem('nickname', document.getElementById('nickname').value);
+            updateNicknameUI();
+        }
+        function updateNicknameUI() {
+            let name = localStorage.getItem('nickname') || '';
+            const isZh = getLang() === 'zh';
+            if (!name || name === 'UnknownUser' || name === '匿名者') {
+                name = isZh ? '匿名者' : 'UnknownUser';
+            }
+            document.getElementById('nickname').value = name;
+        }
+        function updateStatusUI() {
+            // 計算近7天平均表現
+            let validDays = 0, sumDeficit = 0;
+            for(let i = 0; i < 7; i++) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const dateStr = getLocalISODate(d);
+                const rec = JSON.parse(localStorage.getItem('record_' + dateStr));
+                if(rec && !rec.isCheatDay) {
+                    const eaten = (parseFloat(rec.breakfast)||0) + (parseFloat(rec.lunch)||0) + (parseFloat(rec.dinner)||0);
+                    if(eaten > 0) {
+                        validDays++;
+                        sumDeficit += (rec.tdee + (parseFloat(rec.exercise)||0) - eaten);
+                    }
+                }
+            }
+            
+            const badge = document.getElementById('user-status');
+            badge.className = 'status-badge'; // reset
+            const isZh = getLang() === 'zh';
+            
+            if(validDays === 0) {
+                badge.innerText = isZh ? '普通' : 'Normal';
+                badge.classList.add('status-normal');
+            } else {
+                const avgDef = sumDeficit / validDays;
+                if(avgDef > 150) {
+                    badge.innerText = isZh ? '積極' : 'Active';
+                    badge.classList.add('status-active');
+                } else if(avgDef < 0) {
+                    badge.innerText = isZh ? '懶散' : 'Lazy';
+                    badge.classList.add('status-lazy');
+                } else {
+                    badge.innerText = isZh ? '普通' : 'Normal';
+                    badge.classList.add('status-normal');
+                }
+            }
+        }
+        function showStatusTooltip() {
+            const bubble = document.getElementById('status-bubble');
+            const isZh = getLang() === 'zh';
+            bubble.innerText = isZh ? '資訊來自近期分析趨勢' : 'Based on recent trends';
+            bubble.classList.add('show');
+            clearTimeout(statusTimeout);
+            statusTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 2000);
+        }
+
+        // --- Q&A 摺疊 ---
+        function toggleQA(el) {
+            el.classList.toggle('active');
+        }
+
+        // --- 自訂日曆與選單 ---
+        let calCurrentMonth = new Date();
+        function openCalendarModal() {
+            calCurrentMonth = new Date(dateInput.value);
+            renderCalendarContent();
+        }
+        function changeCalMonth(offset) {
+            calCurrentMonth.setMonth(calCurrentMonth.getMonth() + offset);
+            renderCalendarContent();
+        }
+        function renderCalendarContent() {
+            const y = calCurrentMonth.getFullYear();
+            const m = calCurrentMonth.getMonth();
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+            
+            const monthNamesZh = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+            const monthNamesEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const title = getLang() === 'zh' ? `${y}年 ${monthNamesZh[m]}` : `${monthNamesEn[m]} ${y}`;
+            
+            const dayNames = getLang() === 'zh' ? ['日','一','二','三','四','五','六'] : ['S','M','T','W','T','F','S'];
+            let gridHTML = `<div class="cal-grid">`;
+            dayNames.forEach(d => gridHTML += `<div class="cal-day-name">${d}</div>`);
+            
+            for(let i=0; i<firstDay; i++) { gridHTML += `<div class="cal-cell empty"></div>`; }
+            
+            const todayStr = getLocalISODate(new Date());
+            const selectedStr = dateInput.value;
+            
+            for(let d=1; d<=daysInMonth; d++) {
+                const cellDate = new Date(y, m, d);
+                const cellDateStr = getLocalISODate(cellDate);
+                let classes = 'cal-cell';
+                if(cellDateStr === todayStr) classes += ' today';
+                if(cellDateStr === selectedStr) classes += ' selected';
+                
+                gridHTML += `<div class="${classes}" onclick="selectCustomDate('${cellDateStr}')">${d}</div>`;
+            }
+            gridHTML += `</div>`;
+            
+            const headerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <button onclick="changeCalMonth(-1)" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--accent-color);">❮</button>
+                    <div style="font-weight:bold; font-size:1.1em;">${title}</div>
+                    <button onclick="changeCalMonth(1)" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--accent-color);">❯</button>
+                </div>
+            `;
+            openCustomModal('', headerHTML + gridHTML, '', true);
+        }
+        function selectCustomDate(dateStr) {
+            dateInput.value = dateStr;
+            closeCustomModal();
+            dateInput.dispatchEvent(new Event('change'));
+        }
+
+        function openRangeModal() {
+            const isZh = getLang() === 'zh';
+            const body = `
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button class="btn-secondary" onclick="selectRange(7)">${isZh?'近 7 日':'Last 7 Days'}</button>
+                    <button class="btn-secondary" onclick="selectRange(30)">${isZh?'近一個月':'Last 30 Days'}</button>
+                    <button class="btn-secondary" onclick="selectRange(180)">${isZh?'近半年':'Last 6 Months'}</button>
+                    <button class="btn-secondary" onclick="selectRange(365)">${isZh?'近一年':'Last Year'}</button>
+                </div>
+            `;
+            openCustomModal(isZh?'選擇分析區間':'Select Range', body, '', true);
+        }
+        function selectRange(val) {
+            document.getElementById('analysis-range').value = val;
+            closeCustomModal();
+            applyLanguage(getLang()); // update button text
+            renderAnalysisCharts();
+        }
+
         // --- 初始化 ---
         window.onload = () => {
             initSettings();
+            updateNicknameUI();
             const today = getLocalISODate(new Date());
             dateInput.value = today;
+            document.getElementById('custom-date-display').innerText = today.replace(/-/g, '/');
             setGreeting();
             renderPresets();
             loadData();
@@ -480,22 +721,31 @@
             return new Date(dateObj.getTime() - (offset*60*1000)).toISOString().split('T')[0];
         }
 
-        function setGreeting() {
-            const hour = new Date().getHours();
-            const greetingEl = document.getElementById('greeting');
-            let text = "晚安";
-            if(getLang() === 'en') {
-                if(hour < 12) text = "Good Morning"; else if(hour < 17) text = "Good Afternoon"; else text = "Good Evening";
-            } else {
-                if(hour < 11) text = "早安"; else if(hour < 17) text = "午安";
-            }
-            // 移除 Emoji，只保留文字
-            greetingEl.innerText = text;
-        }
-
         const quotes = {
-            zh: ["每一滴汗水都是對抗脂肪的子彈！", "堅持下去，昨天的你會感謝今天的你。", "自律給你真正的自由！", "慢慢來，比較快。這是一場馬拉松。", "你吃進去的每一口，都在塑造未來的自己。", "少吃一口，多走一步，目標就在不遠處！", "今天是變得更好的一天！", "感受身體的變化，這才是最真實的進步。"],
-            en: ["Every drop of sweat fights the fat!", "Keep going, your future self will thank you.", "Discipline equals true freedom!", "Slow and steady wins the race.", "You are what you eat.", "Eat a bit less, walk a bit more!", "Today is a great day to improve!", "Feel the changes in your body, that's true progress."]
+            zh: [
+                "每一滴汗水都是對抗脂肪的子彈！ (ง •_•)ง", "堅持下去，昨天的你會感謝今天的你。(๑•̀ㅂ•́)و✧", 
+                "自律給你真正的自由！ ✨", "慢慢來，比較快。這是一場馬拉松。 🏃‍♂️", 
+                "你吃進去的每一口，都在塑造未來的自己。 (OwO)", "少吃一口，多走一步，目標就在不遠處！ 🎯", 
+                "今天是變得更好的一天！ (≧▽≦)", "感受身體的變化，這才是最真實的進步。 💪",
+                "別氣餒，減脂是呈波浪狀下降的！ 🌊", "再撐一下，衣服會告訴你答案的！ 👗",
+                "喝口水，深呼吸，你做得很棒！ 💧", "偶爾放縱沒關係，重要的是隔天繼續努力！ 🌟",
+                "專注於今天的選擇，結果自然會來。 ( •̀ ω •́ )✧", "餓的時候喝杯水，也許你只是渴了！ 🧊",
+                "相信過程，時間會給你最美的回報。 ⏳", "肚子有點餓？那是脂肪在燃燒的聲音！ 🔥",
+                "每一次拒絕誘惑，都是對自己的一次升級！ 🚀", "不要和別人比，和昨天的自己比就好。 🌱",
+                "運動完的暢快感，是什麼美食都比不上的！ 💦", "你比你想像的還要強大！ ฅ^•ﻌ•^ฅ"
+            ],
+            en: [
+                "Every drop of sweat fights the fat! (ง •_•)ง", "Keep going, your future self will thank you. (๑•̀ㅂ•́)و✧", 
+                "Discipline equals true freedom! ✨", "Slow and steady wins the race. 🏃‍♂️", 
+                "You are what you eat. (OwO)", "Eat less, move more, target in sight! 🎯", 
+                "Today is a great day to improve! (≧▽≦)", "Feel the changes in your body! 💪",
+                "Don't give up, weight loss is non-linear! 🌊", "Hold on, your clothes will tell the truth! 👗",
+                "Drink water, breathe, you're doing great! 💧", "Cheat meals are fine, consistency is key! 🌟",
+                "Focus on today's choices. ( •̀ ω •́ )✧", "Hungry? Maybe you're just thirsty! 🧊",
+                "Trust the process, time rewards effort. ⏳", "Hungry? That's the sound of burning fat! 🔥",
+                "Every 'No' to junk is a level up! 🚀", "Compare yourself only to your past self. 🌱",
+                "The post-workout feeling is better than any food! 💦", "You are stronger than you think! ฅ^•ﻌ•^ฅ"
+            ]
         };
 
         function showRandomQuote() {
@@ -503,9 +753,14 @@
             const q = list[Math.floor(Math.random() * list.length)];
             const bubble = document.getElementById('quote-bubble');
             bubble.innerText = q;
+            
+            // Re-trigger animation
+            bubble.classList.remove('show');
+            void bubble.offsetWidth; 
             bubble.classList.add('show');
+            
             clearTimeout(quoteTimeout);
-            quoteTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 3000);
+            quoteTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 3500);
         }
 
         function changeDate(offset) {
@@ -528,7 +783,7 @@
                 overlay.style.display = 'none';
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(tabId === 'analysis') { renderAnalysisCharts(); }
-            }, 500); // 延長到 0.5 秒讓腳印完整顯示
+            }, 500); // 確保 0.5 秒
         }
 
         function calculateBaseMetrics() {
@@ -668,6 +923,9 @@
             
             const dateStr = dateInput.value;
             const todayStr = getLocalISODate(new Date());
+            
+            document.getElementById('custom-date-display').innerText = dateStr.replace(/-/g, '/');
+            
             let currentRecord = JSON.parse(localStorage.getItem('record_' + dateStr));
             
             if (!currentRecord) {
@@ -708,6 +966,7 @@
                 updateDashboard(currentRecord, metrics);
             }
             updateTotalDeficit();
+            updateStatusUI();
         }
 
         function updateDashboard(record, metrics) {
@@ -886,8 +1145,9 @@
 
         async function exportData() {
             const isZh = getLang() === 'zh';
-            if (localStorage.length === 0) { await customAlert(isZh?"提示":"Notice", isZh?"目前沒有資料可以匯出":"No data to export"); return; }
-            const data = JSON.stringify(localStorage);
+            const backupObj = { ...localStorage };
+            if (Object.keys(backupObj).length === 0) { await customAlert(isZh?"提示":"Notice", isZh?"目前沒有資料可以匯出":"No data to export"); return; }
+            const data = JSON.stringify(backupObj);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = `熱量紀錄備份_${getLocalISODate(new Date())}.json`;
@@ -905,7 +1165,10 @@
                     localStorage.clear();
                     for (let key in data) { localStorage.setItem(key, data[key]); }
                     await customAlert(isZh?"提示":"Success", isZh?"資料還原成功":"Data restored successfully");
-                    loadData(); event.target.value = ''; 
+                    initSettings();
+                    updateNicknameUI();
+                    loadData(); 
+                    event.target.value = ''; 
                 } catch (error) { await customAlert(isZh?"錯誤":"Error", isZh?"檔案格式錯誤，匯入失敗":"Invalid file format"); }
             };
             reader.readAsText(file);
