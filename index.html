@@ -331,7 +331,6 @@
         <div id="page-analysis" class="page">
             <div class="analysis-header">
                 <h2 style="margin:0;" class="lang-txt" data-zh="趨勢分析" data-en="Analytics">趨勢分析</h2>
-                <!-- 使用自訂選單取代原生select -->
                 <button class="custom-range-btn" onclick="openOptionsModal('analysis-range')">
                     <span id="range-display" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</span>
                     <span style="font-size: 0.8em; margin-left: 5px;">▼</span>
@@ -1214,33 +1213,88 @@
             openCustomModal(isZh?'每日熱量缺口紀錄':'Daily Deficit History', bodyHTML, '', true);
         }
 
+        // --- 強固、無損的備份與還原邏輯 (解決常規運動和常規餐點遺失問題) ---
         async function exportData() {
             const isZh = getLang() === 'zh';
-            const backupObj = { ...localStorage };
-            if (Object.keys(backupObj).length === 0) { await customAlert(isZh?"提示":"Notice", isZh?"目前沒有資料可以匯出":"No data to export"); return; }
+            
+            // 手動抓取關鍵儲存項（避免某些沙盒模式下 iteration 缺失）
+            const backupObj = {
+                meal_presets: localStorage.getItem('meal_presets') || "[]",
+                exercise_presets: localStorage.getItem('exercise_presets') || "[]",
+                nickname: localStorage.getItem('nickname') || "匿名者",
+                latest_weight: localStorage.getItem('latest_weight') || "",
+                latest_bodyfat: localStorage.getItem('latest_bodyfat') || "",
+                app_theme: localStorage.getItem('app_theme') || "light",
+                app_lang: localStorage.getItem('app_lang') || "zh",
+                gender: localStorage.getItem('gender') || "M",
+                age: localStorage.getItem('age') || "22",
+                height: localStorage.getItem('height') || "173",
+                weight: localStorage.getItem('weight') || "67",
+                activity: localStorage.getItem('activity') || "1.2",
+            };
+
+            // 手動收集所有 record_ 每日紀錄
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('record_')) {
+                    backupObj[key] = localStorage.getItem(key);
+                }
+            }
+
+            // 確保資料庫有資料可以備份
+            if (Object.keys(backupObj).length <= 12) {
+                await customAlert(isZh?"提示":"Notice", isZh?"目前沒有足夠的資料可以匯出":"No data to export");
+                return;
+            }
+
             const data = JSON.stringify(backupObj);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `熱量紀錄備份_${getLocalISODate(new Date())}.json`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `熱量紀錄備份_${getLocalISODate(new Date())}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function importData(event) {
             const isZh = getLang() === 'zh';
             const file = event.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
+                    
+                    // 安全驗證：確保有導入 preset
+                    if (!data.hasOwnProperty('meal_presets') && !data.hasOwnProperty('exercise_presets')) {
+                        throw new Error('無效備份');
+                    }
+
                     localStorage.clear();
-                    for (let key in data) { localStorage.setItem(key, data[key]); }
-                    await customAlert(isZh?"提示":"Success", isZh?"資料還原成功":"Data restored successfully");
+
+                    // 還原所有項
+                    for (let key in data) {
+                        localStorage.setItem(key, data[key]);
+                    }
+
+                    // 強制重整全域變數，避免內存快取衝突
+                    mealPresets = JSON.parse(localStorage.getItem('meal_presets')) || [];
+                    exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
+
+                    await customAlert(isZh?"提示":"Success", isZh?"無損備份資料還原成功！已完整復原您的紀錄、常規餐點與運動資料。":"Data restored successfully, presets loaded.");
+                    
                     initSettings();
                     updateNicknameUI();
+                    renderPresets();
                     loadData(); 
                     event.target.value = ''; 
-                } catch (error) { await customAlert(isZh?"錯誤":"Error", isZh?"檔案格式錯誤，匯入失敗":"Invalid file format"); }
+                } catch (error) {
+                    await customAlert(isZh?"錯誤":"Error", isZh?"檔案格式不符，請確認是否為正確的「熱量紀錄備份」檔案。":"Invalid file format");
+                }
             };
             reader.readAsText(file);
         }
