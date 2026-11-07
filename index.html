@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>我的熱量缺口</title>
     <link rel="manifest" href="manifest.json">
-    <!-- 引入 Chart.js 與 DataLabels 插件來繪製專業圖表 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
@@ -16,7 +15,7 @@
             --text-main: #4a3b32;      
             --text-sub: #8d7b68;       
             --accent-color: #c86b3c;   
-            --accent-sub: #a38f7b;     /* 今日缺口的新顏色 */
+            --accent-sub: #a38f7b;     
             --ring-empty: #dcd1be;     
             --border-color: #dfd5c4;   
         }
@@ -32,7 +31,6 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 全局頂部：日期選擇器 */
         .global-header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto;
@@ -41,7 +39,7 @@
         .date-picker { 
             background: transparent; border: none; font-size: 16px; 
             color: var(--text-sub); font-weight: bold; padding: 5px; outline: none;
-            text-align: center; text-align-last: center; width: 140px; /* 置中微調 */
+            text-align: center; text-align-last: center; width: 140px; 
         }
 
         .card { 
@@ -56,75 +54,78 @@
             padding: 15px 10px; border-radius: 16px;
         }
         .deficit-board h1 { margin: 5px 0; font-size: 1.8em; }
-        .board-total { background: var(--accent-color); }
-        .board-today { background: var(--accent-sub); } /* 今日缺口顏色區隔 */
+        .board-total { background: var(--accent-color); cursor: pointer; transition: opacity 0.2s; }
+        .board-total:active { opacity: 0.8; }
+        .board-today { background: var(--accent-sub); } 
 
         /* 圓環圖 (今日餘額) */
         .dashboard { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
-        .ring-wrapper { position: relative; width: 100px; height: 100px; }
+        .ring-wrapper { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
         .ring-chart {
             width: 100%; height: 100%; border-radius: 50%;
             background: conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0);
             display: flex; align-items: center; justify-content: center;
         }
         .ring-chart::before { content: ""; width: 76px; height: 76px; background: var(--card-bg); border-radius: 50%; }
-        .dashboard-info h2 { margin: 0; font-size: 2.2em; color: var(--text-main); }
-        .dashboard-info p { margin: 5px 0 0 0; color: var(--text-sub); font-size: 0.9em; }
+        
+        .dashboard-info { display: flex; flex-direction: column; justify-content: center; }
+        .dashboard-info .text-top { margin: 0; font-size: 1.1em; font-weight: bold; color: var(--text-main); }
+        .dashboard-info h2 { margin: 5px 0; font-size: 2.6em; color: var(--text-main); line-height: 1; }
+        .dashboard-info .text-bottom { margin: 5px 0 0 0; font-size: 1em; font-weight: bold; color: var(--text-sub); }
+
+        /* 蛋白質進度條 */
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.95em; font-weight: bold; color: var(--text-main); margin-bottom: 8px; }
+        .progress-bg { width: 100%; height: 10px; background: var(--ring-empty); border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent-color); border-radius: 5px; transition: width 0.3s ease; }
 
         /* 圖表與數值列 */
-        .chart-container { position: relative; height: 200px; width: 100%; margin: 15px 0; }
-        .macro-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-color); font-size: 0.95em; font-weight: bold; }
-        .macro-row:last-child { border-bottom: none; }
+        .chart-container { position: relative; height: 200px; width: 100%; margin: 15px 0 5px 0; }
+        .macro-row { display: flex; justify-content: space-between; padding: 15px 0 0 0; font-size: 0.95em; font-weight: bold; }
         
+        /* 分析頁面相關 */
+        .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .range-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-weight: bold; outline: none; }
+        .insight-box { background: #faf6f0; padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; border-left: 4px solid var(--accent-color); }
+
+        /* 歷史紀錄 Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--bg-color); width: 100%; max-width: 400px; max-height: 75vh; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; }
+        .close-btn { background: none; border: none; font-size: 1.5em; color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1; }
+        .history-list { overflow-y: auto; flex: 1; padding-right: 5px; }
+        .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: bold; }
+        .history-item:last-child { border-bottom: none; }
+        .history-deficit { color: var(--accent-color); }
+        .history-deficit.negative { color: #d9534f; }
+
         /* 表單 */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
-        input, select { 
-            width: 100%; padding: 12px; margin-top: 5px; 
-            border: 1px solid var(--border-color); border-radius: 10px; 
-            box-sizing: border-box; font-size: 16px; background: #faf6f0; color: var(--text-main);
-        }
+        input, select:not(.range-select) { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #faf6f0; color: var(--text-main); }
         input:focus { outline: none; border-color: var(--accent-color); }
-        button.btn-primary { 
-            width: 100%; padding: 16px; background: var(--accent-color); color: white; 
-            border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; margin-top: 25px; cursor: pointer;
-        }
-        button.btn-secondary {
-            width: 100%; padding: 16px; background: #d3c4b1; color: var(--text-main); 
-            border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; margin-top: 15px; cursor: pointer;
-        }
+        button.btn-primary { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; margin-top: 25px; cursor: pointer; transition: background 0.2s; }
+        button.btn-primary.success { background: #5e726b; }
+        button.btn-secondary { width: 100%; padding: 16px; background: #d3c4b1; color: var(--text-main); border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; margin-top: 15px; cursor: pointer; }
 
-        /* 底部導覽列 (順序更新) */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--bg-color); border-top: 1px solid var(--border-color);
-            display: flex; justify-content: space-around; align-items: center;
-            padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 100;
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center;
-            color: var(--text-sub); background: none; border: none; font-size: 0.8em;
-            cursor: pointer; padding: 5px 15px;
-        }
+        /* 底部導覽列 */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); background: none; border: none; font-size: 0.8em; cursor: pointer; padding: 5px 15px; }
         .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
         .nav-item.active { color: var(--accent-color); font-weight: bold; }
-        .nav-center {
-            background: var(--accent-color); color: white; border-radius: 50%; width: 50px; height: 50px;
-            display: flex; justify-content: center; align-items: center; margin-top: -20px; 
-            box-shadow: 0 4px 10px rgba(200, 107, 60, 0.4); border: none; cursor: pointer;
-        }
+        .nav-center { background: var(--accent-color); color: white; border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; margin-top: -20px; box-shadow: 0 4px 10px rgba(200, 107, 60, 0.4); border: none; cursor: pointer; }
         .nav-center svg { width: 26px; height: 26px; fill: white; }
     </style>
 </head>
 <body>
 
-    <!-- 全局日期選擇 (所有分頁共用) -->
     <div class="global-header">
         <h1 id="greeting">晚安</h1>
         <input type="date" id="date" class="date-picker">
     </div>
 
     <div class="container">
-        <!-- ================= 第1頁：身體 (原數值) ================= -->
+        <!-- 第1頁：身體 (原數值) -->
         <div id="page-tdee" class="page">
             <h2 style="margin-top:0;">我的身體數值</h2>
             <div class="card">
@@ -133,9 +134,7 @@
                     <div style="font-size: 2.5em; font-weight: bold; color: var(--accent-color);" id="tdee-value">0</div>
                     <div style="color: var(--text-sub); font-size: 0.9em;">建議蛋白質目標: <span id="protein-target-display">0</span> g</div>
                 </div>
-                
-                <label>性別</label>
-                <select id="gender"><option value="M">男性</option><option value="F">女性</option></select>
+                <label>性別</label><select id="gender"><option value="M">男性</option><option value="F">女性</option></select>
                 <label>年齡</label><input type="number" id="age" value="22">
                 <label>身高 (cm)</label><input type="number" id="height" value="173">
                 <label>體重 (kg)</label><input type="number" id="weight" value="67">
@@ -146,16 +145,15 @@
                     <option value="1.55">中度活動 (每週運動3-5天)</option>
                     <option value="1.725">高度活動 (每週運動6-7天)</option>
                 </select>
-                <button class="btn-primary" onclick="switchTab('home'); alert('設定已更新！')">確認並返回</button>
+                <button class="btn-primary" onclick="switchTab('home'); alert('設定已更新')">確認並返回</button>
             </div>
         </div>
 
-        <!-- ================= 第2頁：首頁 (唯讀圖表) ================= -->
+        <!-- 第2頁：首頁 (唯讀圖表) -->
         <div id="page-home" class="page active">
-            
             <div class="deficits-wrapper">
-                <div class="deficit-board board-total">
-                    <div style="font-size: 0.8em; opacity: 0.9;">總累計缺口</div>
+                <div class="deficit-board board-total" onclick="openHistoryModal()">
+                    <div style="font-size: 0.8em; opacity: 0.9;">總累計缺口 (點擊查看)</div>
                     <h1 id="total-deficit">0</h1>
                 </div>
                 <div class="deficit-board board-today">
@@ -164,31 +162,32 @@
                 </div>
             </div>
 
-            <!-- 今日剩餘額度 -->
             <div class="card">
                 <div class="dashboard">
-                    <div class="ring-wrapper">
-                        <div class="ring-chart" id="calorie-ring" style="--p: 0%;"></div>
-                    </div>
+                    <div class="ring-wrapper"><div class="ring-chart" id="calorie-ring" style="--p: 0%;"></div></div>
                     <div class="dashboard-info">
+                        <p class="text-top">大卡還可以吃</p>
                         <h2 id="calories-left">0</h2>
-                        <p>大卡還可以吃</p>
-                        <p id="calories-eaten-text" style="font-size: 0.8em; margin-top: 2px;">已吃 0 / 目標 0</p>
+                        <p id="calories-eaten-text" class="text-bottom">已吃 0 / 目標 0</p>
                     </div>
                 </div>
             </div>
 
-            <!-- 當日攝取 (唯讀) -->
             <div class="card">
                 <h3 style="margin-top:0;">當日攝取</h3>
-                <div class="chart-container">
-                    <!-- 三餐圓餅圖 -->
-                    <canvas id="mealPieChart"></canvas>
+                <div class="chart-container"><canvas id="mealPieChart"></canvas></div>
+                
+                <!-- 蛋白質進度條 -->
+                <div style="margin-top: 25px;">
+                    <div class="progress-header">
+                        <span>蛋白質 Protein</span>
+                        <span id="protein-text-top" style="color: var(--text-sub);">0 / 0 g</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="protein-progress-fill" style="width: 0%;"></div>
+                    </div>
                 </div>
-                <div class="macro-row" style="margin-top: 20px;">
-                    <span style="color: var(--text-main);">蛋白質 Protein</span>
-                    <span style="color: var(--text-sub);" id="protein-display">0 / 0 g</span>
-                </div>
+
                 <div class="macro-row">
                     <span style="color: var(--text-main);">運動消耗 Exercise</span>
                     <span style="color: var(--text-sub);" id="exercise-display">0 kcal</span>
@@ -196,38 +195,43 @@
             </div>
         </div>
 
-        <!-- ================= 第3頁：新增紀錄 (原首頁表單) ================= -->
+        <!-- 第3頁：新增紀錄 -->
         <div id="page-record" class="page">
-            <h2 style="margin-top:0;">今天吃了什麼？</h2>
+            <h2 style="margin-top:0;">當日攝取與消耗</h2>
             <div class="card">
                 <label>早餐攝取 (大卡)</label><input type="number" id="breakfast" value="0">
                 <label>午餐攝取 (大卡)</label><input type="number" id="lunch" value="0">
                 <label>晚餐攝取 (大卡)</label><input type="number" id="dinner" value="0">
                 <label>蛋白質總攝取 (克)</label><input type="number" id="protein" value="0">
                 <label>額外運動消耗 (大卡)</label><input type="number" id="exercise" value="0">
-                
-                <button class="btn-primary" onclick="saveData()">儲存當日紀錄</button>
+                <button class="btn-primary" id="save-btn" onclick="saveData()">儲存當日紀錄</button>
             </div>
         </div>
 
-        <!-- ================= 第4頁：分析 (時間線圖表) ================= -->
+        <!-- 第4頁：分析 (時間線圖表) -->
         <div id="page-analysis" class="page">
-            <h2 style="margin-top:0;">近 7 日分析</h2>
-            <div class="card">
-                <h3 style="font-size: 1em; text-align: center;">熱量攝取趨勢</h3>
-                <div class="chart-container">
-                    <canvas id="calorieLineChart"></canvas>
-                </div>
+            <div class="analysis-header">
+                <h2 style="margin:0;">趨勢分析</h2>
+                <select id="analysis-range" class="range-select" onchange="renderAnalysisCharts()">
+                    <option value="7">近 7 日</option>
+                    <option value="30">近一個月</option>
+                    <option value="180">近半年</option>
+                    <option value="365">近一年</option>
+                </select>
             </div>
             <div class="card">
-                <h3 style="font-size: 1em; text-align: center;">蛋白質攝取趨勢</h3>
-                <div class="chart-container">
-                    <canvas id="proteinLineChart"></canvas>
-                </div>
+                <h3 style="font-size: 1em; text-align: center; margin-top: 0;">熱量攝取趨勢</h3>
+                <div class="chart-container"><canvas id="calorieLineChart"></canvas></div>
+                <div class="insight-box" id="calorie-insight">讀取中...</div>
+            </div>
+            <div class="card">
+                <h3 style="font-size: 1em; text-align: center; margin-top: 0;">蛋白質攝取趨勢</h3>
+                <div class="chart-container"><canvas id="proteinLineChart"></canvas></div>
+                <div class="insight-box" id="protein-insight">讀取中...</div>
             </div>
         </div>
 
-        <!-- ================= 第5頁：備份 ================= -->
+        <!-- 第5頁：備份 -->
         <div id="page-backup" class="page">
             <h2 style="margin-top:0;">資料管理</h2>
             <div class="card">
@@ -239,28 +243,34 @@
         </div>
     </div>
 
-    <!-- ================= 底部導覽列 ================= -->
+    <!-- 歷史紀錄 Modal 視窗 -->
+    <div class="modal-overlay" id="deficitModal" onclick="closeHistoryModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>每日熱量缺口紀錄</h3>
+                <button class="close-btn" onclick="closeHistoryModal(event)">×</button>
+            </div>
+            <div class="history-list" id="history-list"></div>
+        </div>
+    </div>
+
+    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
-        <!-- 1. 身體 (原數值) -->
         <button class="nav-item" onclick="switchTab('tdee')" id="nav-tdee">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             身體
         </button>
-        <!-- 2. 首頁 -->
         <button class="nav-item active" onclick="switchTab('home')" id="nav-home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             首頁
         </button>
-        <!-- 3. 新增紀錄 (+) -->
         <button class="nav-center" onclick="switchTab('record')" id="nav-record">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         </button>
-        <!-- 4. 分析 (時間線) -->
         <button class="nav-item" onclick="switchTab('analysis')" id="nav-analysis">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
             分析
         </button>
-        <!-- 5. 備份 -->
         <button class="nav-item" onclick="switchTab('backup')" id="nav-backup">
             <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
             備份
@@ -269,20 +279,16 @@
 
     <script>
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-
-        // Chart.js 註冊 DataLabels 插件 (用於在圓餅圖顯示數字)
         Chart.register(ChartDataLabels);
 
         const dateInput = document.getElementById('date');
         const profileInputs = ['gender', 'age', 'height', 'weight', 'activity'];
         const logInputs = ['breakfast', 'lunch', 'dinner', 'exercise', 'protein'];
         
-        // 保存圖表實例以供銷毀重建
         let pieChartInst = null;
         let calLineChartInst = null;
         let proLineChartInst = null;
 
-        // 全域配色設定
         Chart.defaults.color = '#8d7b68';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
@@ -301,14 +307,11 @@
             else greetingEl.innerText = "晚安";
         }
 
-        // 分頁切換，切換到分析頁時重新繪製圖表
         function switchTab(tabId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item, .nav-center').forEach(nav => nav.classList.remove('active'));
-            
             document.getElementById('page-' + tabId).classList.add('active');
             document.getElementById('nav-' + tabId).classList.add('active');
-
             if(tabId === 'analysis') { renderAnalysisCharts(); }
         }
 
@@ -324,10 +327,8 @@
             
             const tdee = Math.round(bmr * activity);
             const proteinTarget = Math.round(weight * 1.6); 
-
             document.getElementById('tdee-value').innerText = tdee > 0 ? tdee : 0;
             document.getElementById('protein-target-display').innerText = proteinTarget > 0 ? proteinTarget : 0;
-            
             return { tdee: tdee > 0 ? tdee : 0, proteinTarget: proteinTarget > 0 ? proteinTarget : 0 };
         }
 
@@ -338,7 +339,6 @@
             const currentRecord = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0 };
             logInputs.forEach(id => { document.getElementById(id).value = currentRecord[id] || 0; });
 
-            // 計算今日缺口並更新
             const totalEaten = (parseFloat(currentRecord.breakfast)||0) + (parseFloat(currentRecord.lunch)||0) + (parseFloat(currentRecord.dinner)||0);
             const todayDeficit = (metrics.tdee + (parseFloat(currentRecord.exercise)||0)) - totalEaten;
             document.getElementById('today-deficit').innerText = todayDeficit;
@@ -360,7 +360,13 @@
             
             document.getElementById('calories-left').innerText = caloriesLeft;
             document.getElementById('calories-eaten-text').innerText = `已吃 ${totalEaten} / 目標 ${totalBudget}`;
-            document.getElementById('protein-display').innerText = `${protein} / ${metrics.proteinTarget} g`;
+            
+            // 蛋白質進度條更新
+            document.getElementById('protein-text-top').innerText = `${protein} / ${metrics.proteinTarget} g`;
+            let proPercentage = metrics.proteinTarget > 0 ? (protein / metrics.proteinTarget) * 100 : 0;
+            if (proPercentage > 100) proPercentage = 100;
+            document.getElementById('protein-progress-fill').style.width = proPercentage + '%';
+
             document.getElementById('exercise-display').innerText = `${exercise} kcal`;
 
             let percentage = totalBudget > 0 ? (totalEaten / totalBudget) * 100 : 0;
@@ -368,136 +374,164 @@
             
             const ring = document.getElementById('calorie-ring');
             ring.style.setProperty('--p', percentage + '%');
-            ring.style.background = caloriesLeft < 0 
-                ? `conic-gradient(#d9534f var(--p, 0%), var(--ring-empty) 0)` 
-                : `conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0)`;
+            ring.style.background = caloriesLeft < 0 ? `conic-gradient(#d9534f var(--p, 0%), var(--ring-empty) 0)` : `conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0)`;
 
             renderPieChart(b, l, d);
         }
 
-        // 繪製首頁當日攝取圓餅圖 (使用 Chart.js)
         function renderPieChart(b, l, d) {
             if(pieChartInst) pieChartInst.destroy();
             const ctx = document.getElementById('mealPieChart').getContext('2d');
-            
-            // 如果三餐都是0，顯示灰色空圖表
             const hasData = (b+l+d) > 0;
             const dataVals = hasData ? [b, l, d] : [1];
             const bgColors = hasData ? ['#dfa878', '#a38f7b', '#c86b3c'] : ['#dfd5c4'];
 
             pieChartInst = new Chart(ctx, {
                 type: 'pie',
-                data: {
-                    labels: hasData ? ['早餐', '午餐', '晚餐'] : ['無紀錄'],
-                    datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ece3d1' }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right' },
-                        datalabels: {
-                            color: '#fff', font: { weight: 'bold', size: 14 },
-                            formatter: (value) => hasData && value > 0 ? value : '' // 隱藏 0 的數值
-                        }
-                    }
-                }
+                data: { labels: hasData ? ['早餐', '午餐', '晚餐'] : ['無紀錄'], datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ece3d1' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (value) => hasData && value > 0 ? value : '' } } }
             });
         }
 
-        // 繪製分析頁時間線圖表
         function renderAnalysisCharts() {
             const metrics = calculateBaseMetrics();
-            const labels = [];
-            const calorieIntakes = [];
-            const calorieBudgets = [];
-            const proteinIntakes = [];
-            const proteinTargets = [];
+            const range = parseInt(document.getElementById('analysis-range').value);
+            const labels = [], calorieIntakes = [], calorieBudgets = [], proteinIntakes = [], proteinTargets = [];
+            
+            let validDays = 0;
+            let sumDeficit = 0;
+            let sumProtein = 0;
 
-            // 抓取過去7天的資料
-            for(let i=6; i>=0; i--) {
+            for(let i = range - 1; i >= 0; i--) {
                 const dateObj = new Date(dateInput.value);
                 dateObj.setDate(dateObj.getDate() - i);
                 const dateStr = dateObj.toISOString().split('T')[0];
-                labels.push(dateStr.substring(5).replace('-','/')); // 顯示 MM/DD
                 
-                const rec = JSON.parse(localStorage.getItem('record_' + dateStr)) || {};
-                const eaten = (parseFloat(rec.breakfast)||0) + (parseFloat(rec.lunch)||0) + (parseFloat(rec.dinner)||0);
-                const budget = metrics.tdee + (parseFloat(rec.exercise)||0);
+                // 超過 30 天時隱藏部分標籤以防圖表過於擁擠
+                if (range > 30 && i % Math.ceil(range/15) !== 0 && i !== 0 && i !== range - 1) {
+                    labels.push('');
+                } else {
+                    labels.push(dateStr.substring(5).replace('-','/')); 
+                }
+                
+                const rec = JSON.parse(localStorage.getItem('record_' + dateStr));
+                const eaten = rec ? (parseFloat(rec.breakfast)||0) + (parseFloat(rec.lunch)||0) + (parseFloat(rec.dinner)||0) : 0;
+                const budget = rec ? metrics.tdee + (parseFloat(rec.exercise)||0) : metrics.tdee;
                 
                 calorieIntakes.push(eaten);
                 calorieBudgets.push(budget);
-                proteinIntakes.push(parseFloat(rec.protein)||0);
+                proteinIntakes.push(rec ? parseFloat(rec.protein)||0 : 0);
                 proteinTargets.push(metrics.proteinTarget);
+
+                if (rec && eaten > 0) { // 有實際進食紀錄才算有效天數
+                    validDays++;
+                    sumDeficit += (budget - eaten);
+                    sumProtein += (parseFloat(rec.protein)||0);
+                }
             }
+
+            // 更新分析說明文字
+            const calInsight = document.getElementById('calorie-insight');
+            const proInsight = document.getElementById('protein-insight');
+            
+            if (validDays > 0) {
+                const avgDeficit = Math.round(sumDeficit / validDays);
+                const avgProtein = Math.round(sumProtein / validDays);
+                
+                // 熱量評語
+                if (avgDeficit > 200) calInsight.innerText = `在有紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的熱量缺口。控制得相當不錯，請繼續保持這個節奏！`;
+                else if (avgDeficit >= 0) calInsight.innerText = `在有紀錄的 ${validDays} 天中，平均每日缺口為 ${avgDeficit} 大卡。缺口稍微偏小，若想減脂可考慮微調飲食或增加運動。`;
+                else calInsight.innerText = `在有紀錄的 ${validDays} 天中，平均每日熱量超標 ${Math.abs(avgDeficit)} 大卡。建議多留意飲食攝取，避免脂肪囤積。`;
+
+                // 蛋白質評語
+                if (avgProtein >= metrics.proteinTarget) proInsight.innerText = `平均每日攝取 ${avgProtein}g 蛋白質，已達到設定目標！有助於維持肌肉量與提升飽足感。`;
+                else proInsight.innerText = `平均每日攝取 ${avgProtein}g 蛋白質，距離目標 (${metrics.proteinTarget}g) 還有點距離，建議多補充豆漿、雞肉等優質蛋白。`;
+            } else {
+                calInsight.innerText = "所選期間內尚無足夠的飲食紀錄可供分析。";
+                proInsight.innerText = "所選期間內尚無足夠的蛋白質紀錄可供分析。";
+            }
+
+            // 繪製圖表 (數據點過多時隱藏點以維持美觀)
+            const pointRadius = range > 30 ? 0 : 3;
 
             if(calLineChartInst) calLineChartInst.destroy();
             if(proLineChartInst) proLineChartInst.destroy();
 
-            // 1. 熱量趨勢圖
             const ctxCal = document.getElementById('calorieLineChart').getContext('2d');
             calLineChartInst = new Chart(ctxCal, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: '攝取熱量', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3 },
-                        { label: '消耗額度 (TDEE+運動)', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } } }
+                data: { labels: labels, datasets: [ { label: '攝取熱量', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius }, { label: '消耗額度', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
 
-            // 2. 蛋白質趨勢圖
             const ctxPro = document.getElementById('proteinLineChart').getContext('2d');
             proLineChartInst = new Chart(ctxPro, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: '攝取蛋白質', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3 },
-                        { label: '目標', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } } }
+                data: { labels: labels, datasets: [ { label: '攝取蛋白質', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius }, { label: '目標', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
         }
 
         function saveData() {
             profileInputs.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
             const metrics = calculateBaseMetrics();
-            
             const record = {};
             logInputs.forEach(id => { record[id] = parseFloat(document.getElementById(id).value) || 0; });
             record.tdee = metrics.tdee;
             record.deficit = (record.tdee + record.exercise) - (record.breakfast + record.lunch + record.dinner);
-            
             localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
-            
             loadData();
             
-            const btn = document.querySelector('#page-record .btn-primary');
-            const originalText = btn.innerText;
-            btn.innerText = "✅ 儲存成功！";
-            setTimeout(() => { 
-                btn.innerText = originalText; 
-                switchTab('home'); // 儲存完自動跳回首頁查看成果
-            }, 1000);
+            const btn = document.getElementById('save-btn');
+            const originalText = "儲存當日紀錄";
+            btn.innerText = "儲存成功";
+            btn.classList.add('success');
+            setTimeout(() => { btn.innerText = originalText; btn.classList.remove('success'); switchTab('home'); }, 1000);
         }
 
         function updateTotalDeficit() {
             let total = 0;
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('record_')) {
-                    const record = JSON.parse(localStorage.getItem(key));
-                    total += record.deficit || 0;
-                }
+                if (key.startsWith('record_')) { total += JSON.parse(localStorage.getItem(key)).deficit || 0; }
             }
             document.getElementById('total-deficit').innerText = total;
         }
 
+        // 開關 Modal
+        function openHistoryModal() {
+            const listEl = document.getElementById('history-list');
+            listEl.innerHTML = '';
+            let records = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('record_')) {
+                    records.push({ date: key.replace('record_', ''), deficit: JSON.parse(localStorage.getItem(key)).deficit || 0 });
+                }
+            }
+            records.sort((a, b) => new Date(b.date) - new Date(a.date)); // 日期從新到舊排序
+
+            if(records.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-sub);">尚無紀錄</div>';
+            } else {
+                records.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    const isNeg = r.deficit < 0;
+                    div.innerHTML = `<span>${r.date.replace(/-/g, '/')}</span> <span class="history-deficit ${isNeg ? 'negative' : ''}">${r.deficit > 0 ? '+'+r.deficit : r.deficit} kcal</span>`;
+                    listEl.appendChild(div);
+                });
+            }
+            document.getElementById('deficitModal').classList.add('active');
+        }
+        
+        function closeHistoryModal(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('deficitModal').classList.remove('active');
+        }
+
         function exportData() {
-            if (localStorage.length === 0) { alert("目前沒有資料可以匯出！"); return; }
+            if (localStorage.length === 0) { alert("目前沒有資料可以匯出"); return; }
             const data = JSON.stringify(localStorage);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -516,8 +550,8 @@
                     const data = JSON.parse(e.target.result);
                     localStorage.clear();
                     for (let key in data) { localStorage.setItem(key, data[key]); }
-                    alert("資料還原成功！"); loadData(); event.target.value = ''; 
-                } catch (error) { alert("檔案格式錯誤，匯入失敗！"); }
+                    alert("資料還原成功"); loadData(); event.target.value = ''; 
+                } catch (error) { alert("檔案格式錯誤，匯入失敗"); }
             };
             reader.readAsText(file);
         }
