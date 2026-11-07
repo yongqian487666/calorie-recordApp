@@ -20,7 +20,7 @@
             --border-color: #dfd5c4;   
         }
 
-        /* 隱藏所有瀏覽器的滾動條 (Scrollbar) */
+        /* 隱藏所有瀏覽器的滾動條 */
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -35,15 +35,21 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* 頂部 Header 與 日期切換 */
         .global-header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto;
         }
-        .global-header h1 { margin: 0; font-size: 1.8em; }
+        .global-header h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .global-header h1:active { opacity: 0.7; }
+        
+        .date-control { display: flex; align-items: center; justify-content: center; }
+        .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
+        .date-nav-btn:active { opacity: 0.5; }
         .date-picker { 
             background: transparent; border: none; font-size: 16px; 
-            color: var(--text-sub); font-weight: bold; padding: 5px; outline: none;
-            text-align: center; text-align-last: center; width: 140px; 
+            color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none;
+            text-align: center; text-align-last: center; width: 135px; 
         }
 
         .card { 
@@ -74,12 +80,10 @@
         .dashboard-info h2 { margin: 5px 0; font-size: 2.8em; font-weight: 900; color: var(--text-main); line-height: 1; }
         .dashboard-info .text-bottom { margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: var(--text-sub); }
 
-        /* 放縱日特殊儀表板 */
         .cheat-dashboard { display: none; flex-direction: column; align-items: center; text-align: center; padding: 20px 0; }
         .cheat-dashboard h2 { margin: 0; font-size: 2em; color: var(--text-main); }
         .cheat-dashboard p { margin: 10px 0 0 0; font-size: 1.1em; color: var(--text-sub); font-weight: bold; }
 
-        /* 蛋白質進度條 */
         .progress-header { display: flex; justify-content: space-between; font-size: 0.95em; font-weight: bold; color: var(--text-main); margin-bottom: 8px; }
         .progress-bg { width: 100%; height: 10px; background: var(--ring-empty); border-radius: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--accent-color); border-radius: 5px; transition: width 0.3s ease; }
@@ -87,18 +91,20 @@
         .chart-container { position: relative; height: 200px; width: 100%; margin: 15px 0 5px 0; }
         .macro-row { display: flex; justify-content: space-between; padding: 15px 0 0 0; font-size: 0.95em; font-weight: bold; }
         
-        /* 分析頁面 */
         .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .range-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-weight: bold; outline: none; }
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
 
-        /* 歷史紀錄 Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        /* 全域 Modal 遮罩 (包含歷史紀錄與自訂提示視窗) */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--bg-color); width: 100%; max-width: 400px; max-height: 75vh; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .modal-content { background: var(--bg-color); width: 100%; max-width: 360px; max-height: 75vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; box-sizing: border-box; }
+        
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-        .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; }
+        .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; text-align: center; width: 100%; }
+        .modal-header.has-close h3 { text-align: left; }
         .close-btn { background: none; border: none; font-size: 1.5em; color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1; }
+        
         .history-list { overflow-y: auto; flex: 1; padding-right: 5px; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: bold; }
         .history-item:last-child { border-bottom: none; }
@@ -135,8 +141,12 @@
 <body>
 
     <div class="global-header">
-        <h1 id="greeting">晚安</h1>
-        <input type="date" id="date" class="date-picker">
+        <h1 id="greeting" onclick="showRandomQuote()">晚安 <span style="font-size: 0.8em; margin-left: 2px;">💬</span></h1>
+        <div class="date-control">
+            <button class="date-nav-btn" onclick="changeDate(-1)">❮</button>
+            <input type="date" id="date" class="date-picker">
+            <button class="date-nav-btn" onclick="changeDate(1)">❯</button>
+        </div>
     </div>
 
     <div class="container">
@@ -161,7 +171,7 @@
                     <option value="1.55">中度活動 (每週運動3-5天)</option>
                     <option value="1.725">高度活動 (每週運動6-7天)</option>
                 </select>
-                <button class="btn-primary" style="margin-top: 20px;" onclick="switchTab('home')">確認並返回</button>
+                <button class="btn-primary" style="margin-top: 20px;" onclick="saveProfileAndGoHome()">確認並返回</button>
             </div>
         </div>
 
@@ -179,7 +189,6 @@
             </div>
 
             <div class="card">
-                <!-- 正常儀表板 -->
                 <div class="dashboard" id="normal-dashboard">
                     <div class="ring-wrapper"><div class="ring-chart" id="calorie-ring" style="--p: 0%;"></div></div>
                     <div class="dashboard-info">
@@ -188,7 +197,6 @@
                         <p id="calories-eaten-text" class="text-bottom">已吃 0 / 目標 0</p>
                     </div>
                 </div>
-                <!-- 放縱日儀表板 -->
                 <div class="cheat-dashboard" id="cheat-dashboard">
                     <h2>今日放縱日</h2>
                     <p>缺口暫停計算，好好享受美食與休息！</p>
@@ -232,7 +240,6 @@
                     <button class="btn-primary" style="flex: 1;" id="save-btn" onclick="saveData()">儲存紀錄</button>
                 </div>
 
-                <!-- 快捷按鈕區塊 -->
                 <div class="preset-section">
                     <h3 class="preset-title">常吃餐點 (點擊帶入)</h3>
                     <div class="chip-container" id="meal-presets"></div>
@@ -242,7 +249,6 @@
                 </div>
             </div>
 
-            <!-- 放縱日撤銷畫面 (平常隱藏) -->
             <div class="card" id="cheat-view-container" style="display: none; text-align: center; padding: 40px 20px;">
                 <h3 style="color: var(--text-main); font-size: 1.5em; margin-bottom: 10px;">目前為放縱日模式</h3>
                 <p style="color: var(--text-sub); margin-bottom: 30px;">不需記錄細節，好好休息！</p>
@@ -291,14 +297,15 @@
         </div>
     </div>
 
-    <!-- 歷史紀錄 Modal -->
-    <div class="modal-overlay" id="deficitModal" onclick="closeHistoryModal(event)">
+    <!-- 歷史紀錄與自訂提示視窗 (取代 alert/confirm/prompt) -->
+    <div class="modal-overlay" id="customModalOverlay" onclick="closeCustomModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h3>每日熱量缺口紀錄</h3>
-                <button class="close-btn" onclick="closeHistoryModal(event)">×</button>
+            <div class="modal-header" id="customModalHeader">
+                <h3 id="customModalTitle">提示</h3>
+                <button class="close-btn" id="customModalCloseBtn" onclick="closeCustomModal()">×</button>
             </div>
-            <div class="history-list" id="history-list"></div>
+            <div id="customModalBody" style="color: var(--text-sub); margin-bottom: 20px; line-height: 1.5;"></div>
+            <div id="customModalFooter" style="display: flex; gap: 10px; flex-direction: column;"></div>
         </div>
     </div>
 
@@ -344,6 +351,53 @@
         Chart.defaults.color = '#8d7b68';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
+        // --- 自訂暖色系 Modal 系統 ---
+        let modalResolve = null;
+
+        function openCustomModal(title, bodyHTML, footerHTML, showClose = true) {
+            document.getElementById('customModalTitle').innerText = title;
+            document.getElementById('customModalBody').innerHTML = bodyHTML;
+            document.getElementById('customModalFooter').innerHTML = footerHTML;
+            
+            const header = document.getElementById('customModalHeader');
+            const closeBtn = document.getElementById('customModalCloseBtn');
+            if(showClose) {
+                header.classList.add('has-close');
+                closeBtn.style.display = 'block';
+            } else {
+                header.classList.remove('has-close');
+                closeBtn.style.display = 'none';
+            }
+            
+            document.getElementById('customModalOverlay').classList.add('active');
+        }
+
+        function closeCustomModal(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('customModalOverlay').classList.remove('active');
+            if (modalResolve) { modalResolve(null); modalResolve = null; }
+        }
+
+        function customAlert(title, message) {
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                const footer = `<button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">確定</button>`;
+                openCustomModal(title, message, footer, false);
+            });
+        }
+
+        function customConfirm(title, message) {
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                const footer = `
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">確定</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(false)">取消</button>
+                `;
+                openCustomModal(title, message, footer, false);
+            });
+        }
+
+        // --- 初始化與基礎邏輯 ---
         window.onload = () => {
             const today = new Date().toISOString().split('T')[0];
             dateInput.value = today;
@@ -355,9 +409,29 @@
         function setGreeting() {
             const hour = new Date().getHours();
             const greetingEl = document.getElementById('greeting');
-            if(hour < 11) greetingEl.innerText = "早安";
-            else if(hour < 17) greetingEl.innerText = "午安";
-            else greetingEl.innerText = "晚安";
+            let text = "晚安";
+            if(hour < 11) text = "早安";
+            else if(hour < 17) text = "午安";
+            greetingEl.innerHTML = text + ' <span style="font-size: 0.8em; margin-left: 2px;">💬</span>';
+        }
+
+        const quotes = [
+            "每一滴汗水都是對抗脂肪的子彈！", "堅持下去，昨天的你會感謝今天的你。",
+            "自律給你真正的自由！", "慢慢來，比較快。這是一場馬拉松。",
+            "你吃進去的每一口，都在塑造未來的自己。", "少吃一口，多走一步，目標就在不遠處！",
+            "今天是變得更好的一天！", "感受身體的變化，這才是最真實的進步。"
+        ];
+
+        function showRandomQuote() {
+            const q = quotes[Math.floor(Math.random() * quotes.length)];
+            customAlert("💡 每日鼓勵", `<div style="font-size:1.1em; color:var(--text-main); font-weight:bold; margin: 10px 0;">「${q}」</div>`);
+        }
+
+        function changeDate(offset) {
+            const d = new Date(dateInput.value);
+            d.setDate(d.getDate() + offset);
+            dateInput.value = d.toISOString().split('T')[0];
+            dateInput.dispatchEvent(new Event('change'));
         }
 
         function switchTab(tabId) {
@@ -385,54 +459,86 @@
             return { tdee: tdee > 0 ? tdee : 0, proteinTarget: proteinTarget > 0 ? proteinTarget : 0 };
         }
 
+        async function saveProfileAndGoHome() {
+            await customAlert("提示", "設定已更新！");
+            switchTab('home');
+        }
+
         // --- 快捷鍵邏輯 ---
         function renderPresets() {
             const mContainer = document.getElementById('meal-presets');
             mContainer.innerHTML = mealPresets.map((m, i) => `
                 <div class="chip" onclick="applyMeal(${i})">${m.name} (${m.cal}kcal) <span class="chip-delete" onclick="event.stopPropagation(); deletePreset('meal', ${i})">×</span></div>
-            `).join('') + `<div class="chip chip-add" onclick="addPreset('meal')">+ 新增</div>`;
+            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('meal')">+ 新增</div>`;
             
             const eContainer = document.getElementById('exercise-presets');
             eContainer.innerHTML = exercisePresets.map((e, i) => `
                 <div class="chip" onclick="applyExercise(${i})">${e.name} (${e.cal}kcal) <span class="chip-delete" onclick="event.stopPropagation(); deletePreset('exercise', ${i})">×</span></div>
-            `).join('') + `<div class="chip chip-add" onclick="addPreset('exercise')">+ 新增</div>`;
+            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('exercise')">+ 新增</div>`;
         }
 
-        function addPreset(type) {
-            if (type === 'meal') {
-                const name = prompt("餐點名稱 (例: 雞胸肉+豆漿):");
-                if(!name) return;
-                const cal = parseInt(prompt("總熱量 (大卡):", 0));
-                const pro = parseInt(prompt("蛋白質 (克):", 0));
-                if(isNaN(cal) || isNaN(pro)) { alert("請輸入有效數字"); return; }
-                mealPresets.push({ name, cal, pro });
-                localStorage.setItem('meal_presets', JSON.stringify(mealPresets));
-            } else {
-                const name = prompt("運動名稱 (例: 羽球3小時):");
-                if(!name) return;
-                const cal = parseInt(prompt("消耗熱量 (大卡):", 0));
-                if(isNaN(cal)) { alert("請輸入有效數字"); return; }
-                exercisePresets.push({ name, cal });
-                localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets));
-            }
-            renderPresets();
+        function promptAddPreset(type) {
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                let body = type === 'meal' ? `
+                    <input type="text" id="presetName" placeholder="餐點名稱 (例: 雞胸肉+豆漿)">
+                    <input type="number" id="presetCal" placeholder="總熱量 (大卡)" style="margin-top:10px;">
+                    <input type="number" id="presetPro" placeholder="蛋白質 (克)" style="margin-top:10px;">
+                ` : `
+                    <input type="text" id="presetName" placeholder="運動名稱 (例: 羽球3小時)">
+                    <input type="number" id="presetCal" placeholder="消耗熱量 (大卡)" style="margin-top:10px;">
+                `;
+                const footer = `
+                    <button class="btn-primary" style="margin-top:0;" onclick="submitPreset('${type}')">新增</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">取消</button>
+                `;
+                openCustomModal(type === 'meal' ? '新增常吃餐點' : '新增常規運動', body, footer, false);
+            }).then(data => {
+                if(!data) return;
+                if(type === 'meal') {
+                    mealPresets.push(data); localStorage.setItem('meal_presets', JSON.stringify(mealPresets));
+                } else {
+                    exercisePresets.push(data); localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets));
+                }
+                renderPresets();
+            });
         }
 
-        function deletePreset(type, index) {
-            if(confirm('確定要刪除此常用項目嗎？')) {
+        function submitPreset(type) {
+            const name = document.getElementById('presetName').value;
+            const cal = parseInt(document.getElementById('presetCal').value) || 0;
+            if(!name) { customAlert('錯誤', '請輸入名稱'); return; }
+            let pro = type === 'meal' ? (parseInt(document.getElementById('presetPro').value) || 0) : 0;
+            closeCustomModal();
+            if(modalResolve) modalResolve({ name, cal, pro });
+        }
+
+        async function deletePreset(type, index) {
+            const confirm = await customConfirm('刪除確認', '確定要刪除此常用項目嗎？');
+            if(confirm) {
                 if (type === 'meal') { mealPresets.splice(index, 1); localStorage.setItem('meal_presets', JSON.stringify(mealPresets)); } 
                 else { exercisePresets.splice(index, 1); localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets)); }
                 renderPresets();
             }
         }
 
-        function applyMeal(index) {
+        async function applyMeal(index) {
             const m = mealPresets[index];
-            const target = prompt(`要把「${m.name}」加到哪一餐？\n輸入 1: 早餐\n輸入 2: 午餐\n輸入 3: 晚餐`, "1");
+            const target = await new Promise(resolve => {
+                modalResolve = resolve;
+                const body = `要將「${m.name}」加入哪一餐？`;
+                const footer = `
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('1')">早餐</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('2')">午餐</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('3')">晚餐</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">取消</button>
+                `;
+                openCustomModal('選擇餐期', body, footer, true);
+            });
+            if(!target) return;
             if(target === "1") { document.getElementById('breakfast').value = parseInt(document.getElementById('breakfast').value||0) + m.cal; }
             else if(target === "2") { document.getElementById('lunch').value = parseInt(document.getElementById('lunch').value||0) + m.cal; }
             else if(target === "3") { document.getElementById('dinner').value = parseInt(document.getElementById('dinner').value||0) + m.cal; }
-            else { return; }
             document.getElementById('protein').value = parseInt(document.getElementById('protein').value||0) + m.pro;
         }
 
@@ -442,22 +548,24 @@
         }
 
         // --- 放縱日邏輯 ---
-        function toggleCheatDay(isCheat) {
+        async function toggleCheatDay(isCheat) {
             const record = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0 };
             if (isCheat) {
-                if(confirm("確定要把今天設為放縱日嗎？今日將不計算熱量缺口。")) {
+                const confirm = await customConfirm("切換放縱日", "確定要把今天設為放縱日嗎？今日將不計算熱量缺口。");
+                if(confirm) {
                     record.isCheatDay = true;
-                    record.deficit = 0; // 缺口歸零
+                    record.deficit = 0; 
                     localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
                     loadData();
                 }
             } else {
                 record.isCheatDay = false;
                 localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
-                saveData(); // 重新計算真實缺口並儲存
+                saveData(); 
             }
         }
 
+        // --- 資料載入與計算 ---
         function loadData() {
             profileInputs.forEach(id => { if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id); });
             const metrics = calculateBaseMetrics();
@@ -465,7 +573,6 @@
             const currentRecord = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0, isCheatDay: false };
             logInputs.forEach(id => { document.getElementById(id).value = currentRecord[id] || 0; });
 
-            // 根據放縱日狀態切換 UI
             if (currentRecord.isCheatDay) {
                 document.getElementById('today-deficit').innerText = "放縱日";
                 document.getElementById('normal-dashboard').style.display = 'none';
@@ -490,15 +597,9 @@
         }
 
         function updateDashboard(record, metrics) {
-            const b = parseFloat(record.breakfast)||0;
-            const l = parseFloat(record.lunch)||0;
-            const d = parseFloat(record.dinner)||0;
-            const totalEaten = b + l + d;
-            const exercise = parseFloat(record.exercise)||0;
-            const protein = parseFloat(record.protein)||0;
-            
-            const totalBudget = metrics.tdee + exercise;
-            const caloriesLeft = totalBudget - totalEaten;
+            const b = parseFloat(record.breakfast)||0, l = parseFloat(record.lunch)||0, d = parseFloat(record.dinner)||0;
+            const totalEaten = b + l + d, exercise = parseFloat(record.exercise)||0, protein = parseFloat(record.protein)||0;
+            const totalBudget = metrics.tdee + exercise, caloriesLeft = totalBudget - totalEaten;
             
             document.getElementById('calories-left').innerText = caloriesLeft;
             document.getElementById('calories-eaten-text').innerText = `已吃 ${totalEaten} / 目標 ${totalBudget}`;
@@ -507,7 +608,6 @@
             let proPercentage = metrics.proteinTarget > 0 ? (protein / metrics.proteinTarget) * 100 : 0;
             if (proPercentage > 100) proPercentage = 100;
             document.getElementById('protein-progress-fill').style.width = proPercentage + '%';
-
             document.getElementById('exercise-display').innerText = `${exercise} kcal`;
 
             let percentage = totalBudget > 0 ? (totalEaten / totalBudget) * 100 : 0;
@@ -537,50 +637,35 @@
         function renderAnalysisCharts() {
             const metrics = calculateBaseMetrics();
             const range = parseInt(document.getElementById('analysis-range').value);
-            const labels = [], calorieIntakes = [], calorieBudgets = [], proteinIntakes = [], proteinTargets = [];
-            const weightData = [], bodyfatData = [];
-            
+            const labels = [], calorieIntakes = [], calorieBudgets = [], proteinIntakes = [], proteinTargets = [], weightData = [], bodyfatData = [];
             let validDays = 0, sumDeficit = 0, sumProtein = 0;
 
             for(let i = range - 1; i >= 0; i--) {
-                const dateObj = new Date(dateInput.value);
-                dateObj.setDate(dateObj.getDate() - i);
+                const dateObj = new Date(dateInput.value); dateObj.setDate(dateObj.getDate() - i);
                 const dateStr = dateObj.toISOString().split('T')[0];
                 
                 if (range > 30 && i % Math.ceil(range/15) !== 0 && i !== 0 && i !== range - 1) { labels.push(''); } 
                 else { labels.push(dateStr.substring(5).replace('-','/')); }
                 
                 const rec = JSON.parse(localStorage.getItem('record_' + dateStr));
-                
                 if (rec && rec.isCheatDay) {
                     calorieIntakes.push(null); calorieBudgets.push(null); proteinIntakes.push(null); proteinTargets.push(null);
                 } else {
                     const eaten = rec ? (parseFloat(rec.breakfast)||0) + (parseFloat(rec.lunch)||0) + (parseFloat(rec.dinner)||0) : 0;
                     const budget = rec ? metrics.tdee + (parseFloat(rec.exercise)||0) : metrics.tdee;
-                    
-                    calorieIntakes.push(eaten);
-                    calorieBudgets.push(budget);
-                    proteinIntakes.push(rec ? parseFloat(rec.protein)||0 : 0);
-                    proteinTargets.push(metrics.proteinTarget);
+                    calorieIntakes.push(eaten); calorieBudgets.push(budget);
+                    proteinIntakes.push(rec ? parseFloat(rec.protein)||0 : 0); proteinTargets.push(metrics.proteinTarget);
 
-                    if (rec && eaten > 0) {
-                        validDays++; sumDeficit += (budget - eaten); sumProtein += (parseFloat(rec.protein)||0);
-                    }
+                    if (rec && eaten > 0) { validDays++; sumDeficit += (budget - eaten); sumProtein += (parseFloat(rec.protein)||0); }
                 }
-                
-                // 體重與體脂追蹤 (允許為空，連線會跨過空值)
                 weightData.push(rec && rec.weight ? rec.weight : null);
                 bodyfatData.push(rec && rec.bodyfat ? rec.bodyfat : null);
             }
 
-            const calInsight = document.getElementById('calorie-insight');
-            const proInsight = document.getElementById('protein-insight');
-            const wInsight = document.getElementById('weight-insight');
+            const calInsight = document.getElementById('calorie-insight'), proInsight = document.getElementById('protein-insight'), wInsight = document.getElementById('weight-insight');
             
             if (validDays > 0) {
-                const avgDeficit = Math.round(sumDeficit / validDays);
-                const avgProtein = Math.round(sumProtein / validDays);
-                
+                const avgDeficit = Math.round(sumDeficit / validDays), avgProtein = Math.round(sumProtein / validDays);
                 if (avgDeficit > 200) calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的缺口。控制得相當不錯，繼續保持！`;
                 else if (avgDeficit >= 0) calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日缺口為 ${avgDeficit} 大卡。缺口稍微偏小，可考慮微調飲食或增加運動。`;
                 else calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日熱量超標 ${Math.abs(avgDeficit)} 大卡。建議多留意攝取，避免囤積。`;
@@ -591,68 +676,48 @@
                 calInsight.innerText = "期間內尚無足夠的飲食紀錄。"; proInsight.innerText = "期間內尚無足夠的蛋白質紀錄。";
             }
 
-            // 體重評語
             const validWeights = weightData.filter(v => v !== null && v > 0);
             if(validWeights.length >= 2) {
-                const oldest = validWeights[0], newest = validWeights[validWeights.length - 1];
-                const diff = (newest - oldest).toFixed(1);
+                const diff = (validWeights[validWeights.length - 1] - validWeights[0]).toFixed(1);
                 if(diff < 0) wInsight.innerText = `期間內體重下降了 ${Math.abs(diff)} kg，缺口有確實反映在體重上！`;
                 else if(diff > 0) wInsight.innerText = `期間內體重上升了 ${diff} kg，可觀察是否為肌肉增加或正常浮動。`;
                 else wInsight.innerText = `這段期間內，體重維持平穩。`;
-            } else {
-                wInsight.innerText = "期間內尚無足夠的體重紀錄。";
-            }
+            } else { wInsight.innerText = "期間內尚無足夠的體重紀錄。"; }
 
             const pointRadius = range > 30 ? 0 : 3;
-
             if(calLineChartInst) calLineChartInst.destroy();
             if(proLineChartInst) proLineChartInst.destroy();
             if(weightLineChartInst) weightLineChartInst.destroy();
 
             const ctxCal = document.getElementById('calorieLineChart').getContext('2d');
             calLineChartInst = new Chart(ctxCal, {
-                type: 'line',
-                data: { labels: labels, datasets: [ { label: '攝取熱量', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '消耗額度', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
+                type: 'line', data: { labels: labels, datasets: [ { label: '攝取熱量', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '消耗額度', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
 
             const ctxPro = document.getElementById('proteinLineChart').getContext('2d');
             proLineChartInst = new Chart(ctxPro, {
-                type: 'line',
-                data: { labels: labels, datasets: [ { label: '攝取蛋白質', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '目標', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
+                type: 'line', data: { labels: labels, datasets: [ { label: '攝取蛋白質', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '目標', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
 
-            // 雙 Y 軸體重體脂圖
             const ctxWeight = document.getElementById('weightLineChart').getContext('2d');
             weightLineChartInst = new Chart(ctxWeight, {
-                type: 'line',
-                data: { labels: labels, datasets: [ { label: '體重(kg)', yAxisID: 'y', data: weightData, borderColor: '#4a3b32', backgroundColor: '#4a3b32', tension: 0.2, pointRadius: pointRadius, spanGaps: true }, { label: '體脂(%)', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: pointRadius, spanGaps: true } ] },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, 
-                    scales: { 
-                        x: { ticks: { autoSkip: false } },
-                        y: { type: 'linear', display: true, position: 'left', title: {display: true, text: '體重 (kg)'} },
-                        y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: '體脂 (%)'} }
-                    } 
-                }
+                type: 'line', data: { labels: labels, datasets: [ { label: '體重(kg)', yAxisID: 'y', data: weightData, borderColor: '#4a3b32', backgroundColor: '#4a3b32', tension: 0.2, pointRadius: pointRadius, spanGaps: true }, { label: '體脂(%)', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: pointRadius, spanGaps: true } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } }, y: { type: 'linear', display: true, position: 'left', title: {display: true, text: '體重 (kg)'} }, y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: '體脂 (%)'} } } }
             });
         }
 
         function saveData() {
-            // 同步最新的身體數值至 Profile
             profileInputs.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
             const metrics = calculateBaseMetrics();
             
             const record = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { isCheatDay: false };
             logInputs.forEach(id => { record[id] = parseFloat(document.getElementById(id).value) || 0; });
             
-            // 將今日的體重體脂一起存入紀錄，供趨勢圖使用
             record.weight = parseFloat(document.getElementById('weight').value) || 0;
             record.bodyfat = parseFloat(document.getElementById('bodyfat').value) || 0;
             record.tdee = metrics.tdee;
-            
-            // 計算真實缺口
             record.deficit = (record.tdee + record.exercise) - (record.breakfast + record.lunch + record.dinner);
             localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
             loadData();
@@ -674,8 +739,6 @@
         }
 
         function openHistoryModal() {
-            const listEl = document.getElementById('history-list');
-            listEl.innerHTML = '';
             let records = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -686,34 +749,26 @@
             }
             records.sort((a, b) => new Date(b.date) - new Date(a.date)); 
 
+            let bodyHTML = '<div class="history-list">';
             if(records.length === 0) {
-                listEl.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-sub);">尚無紀錄</div>';
+                bodyHTML += '<div style="text-align:center; padding: 20px; color: var(--text-sub);">尚無紀錄</div>';
             } else {
                 records.forEach(r => {
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
                     const isNeg = r.deficit < 0;
                     const defText = r.isCheat ? "放縱日" : (r.deficit > 0 ? '+'+r.deficit : r.deficit) + ' kcal';
-                    div.innerHTML = `<span>${r.date.replace(/-/g, '/')}</span> <span class="history-deficit ${isNeg && !r.isCheat ? 'negative' : ''}">${defText}</span>`;
-                    listEl.appendChild(div);
+                    bodyHTML += `<div class="history-item"><span>${r.date.replace(/-/g, '/')}</span> <span class="history-deficit ${isNeg && !r.isCheat ? 'negative' : ''}">${defText}</span></div>`;
                 });
             }
-            document.getElementById('deficitModal').classList.add('active');
-        }
-        
-        function closeHistoryModal(e) {
-            if(e) e.stopPropagation();
-            document.getElementById('deficitModal').classList.remove('active');
+            bodyHTML += '</div>';
+            openCustomModal('每日熱量缺口紀錄', bodyHTML, '', true);
         }
 
-        function exportData() {
-            if (localStorage.length === 0) { alert("目前沒有資料可以匯出"); return; }
+        async function exportData() {
+            if (localStorage.length === 0) { await customAlert("提示", "目前沒有資料可以匯出"); return; }
             const data = JSON.stringify(localStorage);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `熱量紀錄備份_${new Date().toISOString().split('T')[0]}.json`;
+            const a = document.createElement('a'); a.href = url; a.download = `熱量紀錄備份_${new Date().toISOString().split('T')[0]}.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         }
 
@@ -721,13 +776,14 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     localStorage.clear();
                     for (let key in data) { localStorage.setItem(key, data[key]); }
-                    alert("資料還原成功"); loadData(); event.target.value = ''; 
-                } catch (error) { alert("檔案格式錯誤，匯入失敗"); }
+                    await customAlert("提示", "資料還原成功");
+                    loadData(); event.target.value = ''; 
+                } catch (error) { await customAlert("錯誤", "檔案格式錯誤，匯入失敗"); }
             };
             reader.readAsText(file);
         }
