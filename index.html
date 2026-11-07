@@ -22,17 +22,17 @@
             --input-bg: #faf6f0;   
         }
 
-        /* 深色模式變數 */
+        /* 深色模式變數 (優化對比度) */
         [data-theme="dark"] {
-            --bg-color: #2c2724;       
-            --card-bg: #38312c;        
-            --text-main: #e8dfd3;      
-            --text-sub: #a89f91;       
+            --bg-color: #26211e;       
+            --card-bg: #36302b;        
+            --text-main: #f0e6d5;      
+            --text-sub: #b3a696;       
             --accent-color: #c86b3c;   
             --accent-sub: #8b6b55;     
-            --ring-empty: #524a43;     
-            --border-color: #5c534a;
-            --input-bg: #221e1c;   
+            --ring-empty: #4f463e;     
+            --border-color: #524a42;
+            --input-bg: #2a2522;   
         }
 
         ::-webkit-scrollbar { display: none; }
@@ -49,43 +49,28 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- 讀取畫面 Loader (腳印動畫) --- */
+        /* --- 讀取畫面 Loader --- */
         #loading-overlay { display: none; position: fixed; top: 75px; left: 0; right: 0; bottom: 75px; background: var(--bg-color); z-index: 50; align-items: center; justify-content: center; }
         .loader { width: calc(6*30px); height: 50px; display: flex; color: var(--accent-color); filter: drop-shadow(30px 25px 0 currentColor) drop-shadow(60px 0 0 currentColor) drop-shadow(120px 0 0 currentColor); clip-path: inset(0 100% 0 0); animation: l12 0.5s infinite steps(7); }
         .loader:before { content: ""; width: 30px; height: 25px; --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000); background: var(--c) left /70% 70%, var(--c) right/20% 20%, var(--c) top 0 right 15%/20% 20%, var(--c) bottom 0 right 15%/20% 20%; }
         @keyframes l12 { 100% {clip-path: inset(0 -30px 0 0)} }
 
-        /* 頂部 Header 與 泡泡提示 */
+        /* 頂部 Header */
         .global-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto; height: 45px; box-sizing: border-box; }
-        
         .greeting-container { position: relative; display: flex; align-items: center; gap: 8px; }
         .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; }
         .greeting-container h1:active { opacity: 0.6; }
         
-        /* 泡泡動畫 */
-        @keyframes bubbleBounce {
-            0% { transform: translateY(10px) scale(0.9); opacity: 0; }
-            50% { transform: translateY(-5px) scale(1.05); opacity: 1; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .quote-bubble {
-            position: absolute; top: 120%; left: 0; background: var(--accent-color); color: white; padding: 10px 15px; border-radius: 16px; border-top-left-radius: 0;
-            font-size: 0.9em; font-weight: bold; line-height: 1.4; width: max-content; max-width: 250px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            display: none; z-index: 100;
-        }
+        @keyframes bubbleBounce { 0% { transform: translateY(10px) scale(0.9); opacity: 0; } 50% { transform: translateY(-5px) scale(1.05); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+        .quote-bubble { position: absolute; top: 120%; left: 0; background: var(--accent-color); color: white; padding: 10px 15px; border-radius: 16px; border-top-left-radius: 0; font-size: 0.9em; font-weight: bold; line-height: 1.4; width: max-content; max-width: 250px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: none; z-index: 100; }
         .quote-bubble.show { display: block; animation: bubbleBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         
-        /* 狀態提示泡泡 */
-        .status-bubble {
-            position: absolute; top: 120%; left: 0; background: var(--text-main); color: var(--bg-color); padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0;
-            font-size: 0.85em; font-weight: bold; width: max-content; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: none; z-index: 100;
-        }
+        .status-bubble { position: absolute; top: 120%; left: 0; background: var(--text-main); color: var(--bg-color); padding: 8px 12px; border-radius: 12px; border-top-left-radius: 0; font-size: 0.85em; font-weight: bold; width: max-content; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: none; z-index: 100; }
         .status-bubble.show { display: block; animation: bubbleBounce 0.3s ease-out forwards; }
 
         .date-control { display: flex; align-items: center; justify-content: center; }
         .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
         .date-nav-btn:active { opacity: 0.5; }
-        .custom-date-btn { background: transparent; border: none; font-size: 16px; color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none; text-align: center; width: 105px; cursor: pointer; }
         
         .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
 
@@ -103,7 +88,7 @@
         
         .dashboard-info { display: flex; flex-direction: column; justify-content: center; }
         
-        /* 輕微晃動動畫 */
+        /* 輕微晃動動畫 (4秒抖一次) */
         @keyframes slightJiggle {
             0%, 90% { transform: rotate(0deg); }
             92% { transform: rotate(-2deg); }
@@ -113,7 +98,6 @@
             100% { transform: rotate(0deg); }
         }
         .dashboard-info .text-top { margin: 0; font-size: 1.2em; font-weight: bold; color: var(--text-main); display: inline-block; animation: slightJiggle 4s infinite; transform-origin: left center; }
-        
         .dashboard-info h2 { margin: 5px 0; font-size: 2.8em; font-weight: 900; color: var(--text-main); line-height: 1; }
         .dashboard-info .text-bottom { margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: var(--text-sub); }
 
@@ -129,11 +113,6 @@
         .macro-row { display: flex; justify-content: space-between; padding: 15px 0 0 0; font-size: 0.95em; font-weight: bold; }
         
         .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        
-        /* 自訂分析區間按鈕 */
-        .custom-range-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
-        .custom-range-btn:active { opacity: 0.7; }
-
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
 
         /* Q&A 手風琴 */
@@ -154,7 +133,6 @@
         .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; text-align: center; width: 100%; }
         .modal-header.has-close h3 { text-align: left; }
         .close-btn { background: none; border: none; font-size: 1.5em; color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1; }
-        
         .history-list { overflow-y: auto; flex: 1; padding-right: 5px; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: bold; }
         .history-item:last-child { border-bottom: none; }
@@ -170,10 +148,15 @@
         .cal-cell.today { background: var(--accent-sub); color: white; }
         .cal-cell.selected { background: var(--accent-color); color: white; }
 
-        /* 表單與按鈕 */
+        /* 表單與按鈕 (自訂 UI) */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
-        input:focus, select:focus { outline: none; border-color: var(--accent-color); }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
+        input:focus { outline: none; border-color: var(--accent-color); }
+        
+        .custom-select-btn { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); text-align: left; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .custom-select-btn::after { content: '▼'; font-size: 0.8em; color: var(--accent-color); }
+        .custom-select-btn.inline { width: auto; padding: 6px 12px; display: inline-flex; gap: 5px; }
+        
         button.btn-primary { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button.btn-secondary { width: 100%; padding: 16px; background: var(--ring-empty); color: var(--text-main); border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
         button.btn-danger { width: 100%; padding: 16px; background: #d9534f; color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
@@ -186,10 +169,13 @@
         .chip-delete { background: var(--border-color); color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; justify-content: center; align-items: center; font-size: 12px; line-height: 1; margin-left: 4px; padding-bottom: 2px; box-sizing: border-box; }
         .chip-add { background: transparent; border: 1px dashed var(--accent-color); color: var(--accent-color); }
 
-        /* 暱稱與狀態區塊 */
-        .profile-row { display: flex; gap: 15px; align-items: center; margin-bottom: 10px; }
-        .profile-col { flex: 1; }
-        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 8px; font-size: 0.85em; font-weight: bold; color: white; cursor: pointer; margin-top: 5px; text-align: center; width: max-content;}
+        /* 暱稱專屬卡片與狀態 */
+        .profile-card { display: flex; flex-direction: column; gap: 10px; }
+        .profile-header { display: flex; justify-content: space-between; align-items: center; }
+        .profile-name { font-size: 1.8em; font-weight: 900; color: var(--text-main); }
+        .edit-icon { background: none; border: none; cursor: pointer; color: var(--accent-color); padding: 5px; }
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 12px; font-size: 0.9em; font-weight: bold; color: white; cursor: pointer; width: max-content; transition: opacity 0.2s; }
+        .status-badge:active { opacity: 0.7; }
         .status-active { background: #5e726b; }
         .status-normal { background: var(--accent-sub); }
         .status-lazy { background: #d9534f; }
@@ -204,8 +190,13 @@
 </head>
 <body data-theme="light">
 
-    <!-- 實際隱藏的 date input 用於存儲邏輯資料 -->
+    <!-- 隱藏原生輸入供邏輯使用 -->
     <input type="date" id="date" style="display:none;">
+    <input type="hidden" id="gender" value="M">
+    <input type="hidden" id="activity" value="1.2">
+    <input type="hidden" id="lang" value="zh">
+    <input type="hidden" id="theme" value="light">
+    <input type="hidden" id="analysis-range" value="7">
 
     <div class="global-header">
         <div class="greeting-container">
@@ -214,12 +205,12 @@
         </div>
         <div class="date-control">
             <button class="date-nav-btn" onclick="changeDate(-1)">❮</button>
-            <button class="custom-date-btn" id="custom-date-display" onclick="openCalendarModal()">2026/11/07</button>
+            <button class="custom-select-btn inline" style="border:none; background:transparent;" id="custom-date-display" onclick="openCalendarModal()">2026/11/07</button>
             <button class="date-nav-btn" onclick="changeDate(1)">❯</button>
         </div>
     </div>
 
-    <!-- 腳印讀取遮罩層 -->
+    <!-- 讀取遮罩層 -->
     <div id="loading-overlay"><div class="loader"></div></div>
 
     <div class="container">
@@ -232,20 +223,25 @@
                     <div style="font-size: 2.5em; font-weight: bold; color: var(--accent-color);" id="tdee-value">0</div>
                     <div style="color: var(--text-sub); font-size: 0.9em;" id="protein-target-text">建議蛋白質目標: <span id="protein-target-display">0</span> g</div>
                 </div>
+                
                 <label class="lang-txt" data-zh="性別" data-en="Gender">性別</label>
-                <select id="gender"><option value="M" class="lang-txt" data-zh="男性" data-en="Male">男性</option><option value="F" class="lang-txt" data-zh="女性" data-en="Female">女性</option></select>
-                <label class="lang-txt" data-zh="年齡" data-en="Age">年齡</label><input type="number" id="age" value="22">
-                <label class="lang-txt" data-zh="身高 (cm)" data-en="Height (cm)">身高 (cm)</label><input type="number" id="height" value="173">
-                <label class="lang-txt" data-zh="體重 (kg)" data-en="Weight (kg)">體重 (kg)</label><input type="number" id="weight" value="67">
+                <button class="custom-select-btn" id="gender-btn" onclick="openOptionsModal('gender')">男性</button>
+                
+                <label class="lang-txt" data-zh="年齡" data-en="Age">年齡</label>
+                <input type="number" id="age" value="22">
+                
+                <label class="lang-txt" data-zh="身高 (cm)" data-en="Height (cm)">身高 (cm)</label>
+                <input type="number" id="height" value="173">
+                
+                <label class="lang-txt" data-zh="體重 (kg)" data-en="Weight (kg)">體重 (kg)</label>
+                <input type="number" id="weight" value="67">
+                
                 <label class="lang-txt" data-zh="體脂率 (%)" data-en="Body Fat (%)">體脂率 (%)</label>
                 <input type="number" id="bodyfat" value="" data-zh-ph="選填 (有量再填)" data-en-ph="Optional" placeholder="選填 (有量再填)">
+                
                 <label class="lang-txt" data-zh="活動係數" data-en="Activity Level">活動係數</label>
-                <select id="activity">
-                    <option value="1.2" class="lang-txt" data-zh="久坐 (幾乎不運動)" data-en="Sedentary">久坐 (幾乎不運動)</option>
-                    <option value="1.375" class="lang-txt" data-zh="輕度活動 (每週運動1-3天)" data-en="Lightly Active">輕度活動 (每週運動1-3天)</option>
-                    <option value="1.55" class="lang-txt" data-zh="中度活動 (每週運動3-5天)" data-en="Moderately Active">中度活動 (每週運動3-5天)</option>
-                    <option value="1.725" class="lang-txt" data-zh="高度活動 (每週運動6-7天)" data-en="Very Active">高度活動 (每週運動6-7天)</option>
-                </select>
+                <button class="custom-select-btn" id="activity-btn" onclick="openOptionsModal('activity')">久坐 (幾乎不運動)</button>
+                
                 <button class="btn-primary lang-txt" style="margin-top: 20px;" onclick="saveProfileAndGoHome()" data-zh="確認並返回" data-en="Save & Return">確認並返回</button>
             </div>
         </div>
@@ -332,12 +328,7 @@
         <div id="page-analysis" class="page">
             <div class="analysis-header">
                 <h2 style="margin:0;" class="lang-txt" data-zh="趨勢分析" data-en="Analytics">趨勢分析</h2>
-                <!-- 隱藏原生select，用自訂按鈕 -->
-                <input type="hidden" id="analysis-range" value="7">
-                <button class="custom-range-btn" onclick="openRangeModal()">
-                    <span id="range-display" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</span>
-                    <span style="font-size: 0.8em; margin-left: 5px;">▼</span>
-                </button>
+                <button class="custom-select-btn inline" id="range-display" onclick="openOptionsModal('analysis-range')">近 7 日</button>
             </div>
             
             <div class="card">
@@ -361,31 +352,26 @@
         <div id="page-settings" class="page">
             <h2 style="margin-top:0;" class="lang-txt" data-zh="設定" data-en="Settings">設定</h2>
             
-            <div class="card">
-                <!-- 稱呼與狀態 -->
-                <div class="profile-row">
-                    <div class="profile-col" style="position: relative;">
-                        <label style="margin-top:0;" class="lang-txt" data-zh="暱稱 / Nickname" data-en="Nickname">暱稱 / Nickname</label>
-                        <input type="text" id="nickname" onchange="updateNickname()" style="margin-bottom:10px;">
-                    </div>
-                    <div class="profile-col" style="position: relative; text-align: right;">
-                        <label style="margin-top:0;" class="lang-txt" data-zh="狀態" data-en="Status">狀態</label>
-                        <div id="user-status" class="status-badge status-normal" onclick="showStatusTooltip()">普通</div>
-                        <div id="status-bubble" class="status-bubble">資訊來自近期趨勢</div>
-                    </div>
+            <!-- 暱稱專屬卡片 -->
+            <div class="card profile-card">
+                <div class="profile-header">
+                    <div class="profile-name" id="nickname-display">匿名者</div>
+                    <button class="edit-icon" onclick="promptEditNickname()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                    </button>
                 </div>
+                <div style="position: relative;">
+                    <div id="user-status" class="status-badge status-normal" onclick="showStatusTooltip()">普通</div>
+                    <div id="status-bubble" class="status-bubble">資訊來自近期趨勢</div>
+                </div>
+            </div>
 
-                <label class="lang-txt" data-zh="語言 / Language" data-en="Language">語言 / Language</label>
-                <select id="lang-select" onchange="changeLanguage()">
-                    <option value="zh">繁體中文</option>
-                    <option value="en">English</option>
-                </select>
+            <div class="card">
+                <label class="lang-txt" style="margin-top:0;" data-zh="語言 / Language" data-en="Language">語言 / Language</label>
+                <button class="custom-select-btn" id="lang-btn" onclick="openOptionsModal('lang')">繁體中文</button>
 
                 <label class="lang-txt" data-zh="外觀模式" data-en="Theme">外觀模式</label>
-                <select id="theme-select" onchange="changeTheme()">
-                    <option value="light" class="lang-txt" data-zh="淺色模式 (Light)" data-en="Light Mode">淺色模式 (Light)</option>
-                    <option value="dark" class="lang-txt" data-zh="深色模式 (Dark)" data-en="Dark Mode">深色模式 (Dark)</option>
-                </select>
+                <button class="custom-select-btn" id="theme-btn" onclick="openOptionsModal('theme')">淺色模式 (Light)</button>
             </div>
 
             <div class="card">
@@ -398,9 +384,8 @@
                 <!-- Q&A 手風琴 -->
                 <div class="qa-container">
                     <h3 style="margin: 0 0 10px 0; font-size: 1.1em;" class="lang-txt" data-zh="常見問題 Q&A" data-en="FAQ">常見問題 Q&A</h3>
-                    
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="1. 如何更改當日攝取與消耗？" data-en="1. How to edit daily records?">1. 如何更改當日攝取與消耗？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="1. 如何更改當日攝取與消耗？" data-en="1. How to edit records?">1. 如何更改當日攝取與消耗？</span><span class="qa-icon">▼</span></div>
                         <div class="qa-body lang-txt" data-zh="點擊頂部日曆切換到該日期，直接修改數字並按「儲存紀錄」即可覆蓋。" data-en="Select the date from the top calendar, edit numbers, and hit Save.">點擊頂部日曆切換到該日期，直接修改數字並按「儲存紀錄」即可覆蓋。</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
@@ -408,23 +393,23 @@
                         <div class="qa-body lang-txt" data-zh="暫停一天熱量計算，讓自己好好休息，不會影響平均數據。" data-en="Pauses calorie counting for the day to let you rest without affecting averages.">暫停一天熱量計算，讓自己好好休息，不會影響平均數據。</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="3. 我要如何算熱量和蛋白質？" data-en="3. How to count calories & protein?">3. 我要如何算熱量和蛋白質？</span><span class="qa-icon">▼</span></div>
-                        <div class="qa-body lang-txt" data-zh="可參考食品包裝標示，或使用網上食物資料庫粗估。" data-en="Check food labels or use online food databases for rough estimates.">可參考食品包裝標示，或使用網上食物資料庫粗估。</div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="3. 我要如何算熱量和蛋白質？" data-en="3. How to count calories/protein?">3. 我要如何算熱量和蛋白質？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="可參考食品包裝標示，或拍下餐點照片，多加描述並交由 AI 估算熱量與蛋白質！" data-en="Check food labels, or take a photo and describe your meal to an AI for a quick estimate!">可參考食品包裝標示，或拍下餐點照片，多加描述並交由 AI 估算熱量與蛋白質！</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="4. 需要盡量天天更新體重嗎？" data-en="4. Do I need to update weight daily?">4. 需要盡量天天更新體重嗎？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="4. 需要盡量天天更新體重嗎？" data-en="4. Do I update weight daily?">4. 需要盡量天天更新體重嗎？</span><span class="qa-icon">▼</span></div>
                         <div class="qa-body lang-txt" data-zh="不用！只要有量的時候在「身體」頁面更新，系統會自動抓取最新數值。" data-en="No! Update it in the Body tab only when you weigh yourself.">不用！只要有量的時候在「身體」頁面更新，系統會自動抓取最新數值。</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="5. 體脂率怎麽更新？" data-en="5. How to update body fat?">5. 體脂率怎麽更新？</span><span class="qa-icon">▼</span></div>
-                        <div class="qa-body lang-txt" data-zh="與體重一樣，有測量時在「身體」頁面輸入並儲存即可。" data-en="Same as weight, enter it in the Body tab when measured.">與體重一樣，有測量時在「身體」頁面輸入並儲存即可。</div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="5. 體脂率怎麼計算？" data-en="5. How to calculate body fat?">5. 體脂率怎麼計算？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-body lang-txt" data-zh="建議使用家用體脂計，或到健身房測量 InBody。若無設備，也可透過網上的「體脂率計算機」輸入頸圍、腰圍等數據粗估。" data-en="Use a smart scale, an InBody test at a gym, or an online body fat calculator with your body measurements.">建議使用家用體脂計，或到健身房測量 InBody。若無設備，也可透過網上的「體脂率計算機」輸入頸圍、腰圍等數據粗估。</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="6. 換手機記得匯出備份！" data-en="6. Export backup before switching phones!">6. 換手機記得匯出備份！</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="6. 換手機記得匯出備份！" data-en="6. Export backup before switching!">6. 換手機記得匯出備份！</span><span class="qa-icon">▼</span></div>
                         <div class="qa-body lang-txt" data-zh="沒錯！資料都存在本機，換裝置前請務必到「設定」匯出備份檔。" data-en="Data is local! Always export backup in Settings before switching devices.">沒錯！資料都存在本機，換裝置前請務必到「設定」匯出備份檔。</div>
                     </div>
                     <div class="qa-item" onclick="toggleQA(this)">
-                        <div class="qa-header"><span class="lang-txt" data-zh="7. 怎樣看分析表減脂才有效？" data-en="7. How to read analytics for fat loss?">7. 怎樣看分析表減脂才有效？</span><span class="qa-icon">▼</span></div>
+                        <div class="qa-header"><span class="lang-txt" data-zh="7. 怎樣看分析表減脂才有效？" data-en="7. Reading trends for fat loss?">7. 怎樣看分析表減脂才有效？</span><span class="qa-icon">▼</span></div>
                         <div class="qa-body lang-txt" data-zh="若「體重曲線」隨「熱量缺口」穩定下降即為有效。蛋白質達標能確保減掉的是脂肪。" data-en="Effective if weight drops along with a calorie deficit. Hitting protein goals ensures fat loss.">若「體重曲線」隨「熱量缺口」穩定下降即為有效。蛋白質達標能確保減掉的是脂肪。</div>
                     </div>
                 </div>
@@ -480,33 +465,48 @@
         let exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
         let quoteTimeout = null, statusTimeout = null;
 
+        // --- 選單定義 ---
+        const selectOpts = {
+            gender: [{v:'M', zh:'男性', en:'Male'}, {v:'F', zh:'女性', en:'Female'}],
+            activity: [
+                {v:'1.2', zh:'久坐 (幾乎不運動)', en:'Sedentary'}, {v:'1.375', zh:'輕度活動 (每週運動1-3天)', en:'Lightly Active'},
+                {v:'1.55', zh:'中度活動 (每週運動3-5天)', en:'Moderately Active'}, {v:'1.725', zh:'高度活動 (每週運動6-7天)', en:'Very Active'}
+            ],
+            lang: [{v:'zh', zh:'繁體中文', en:'繁體中文'}, {v:'en', zh:'English', en:'English'}],
+            theme: [{v:'light', zh:'淺色模式 (Light)', en:'Light Mode'}, {v:'dark', zh:'深色模式 (Dark)', en:'Dark Mode'}],
+            'analysis-range': [{v:'7', zh:'近 7 日', en:'Last 7 Days'}, {v:'30', zh:'近一個月', en:'Last 30 Days'}, {v:'180', zh:'近半年', en:'Last 6 Months'}, {v:'365', zh:'近一年', en:'Last Year'}]
+        };
+
         // --- 外觀與語言設定邏輯 ---
         function initSettings() {
             const savedTheme = localStorage.getItem('app_theme') || 'light';
             document.body.setAttribute('data-theme', savedTheme);
-            document.getElementById('theme-select').value = savedTheme;
+            document.getElementById('theme').value = savedTheme;
 
             const savedLang = localStorage.getItem('app_lang') || 'zh';
-            document.getElementById('lang-select').value = savedLang;
+            document.getElementById('lang').value = savedLang;
             applyLanguage(savedLang);
+            updateSelectButtonsUI();
         }
 
         function changeTheme() {
-            const theme = document.getElementById('theme-select').value;
+            const theme = document.getElementById('theme').value;
             document.body.setAttribute('data-theme', theme);
             localStorage.setItem('app_theme', theme);
             if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysisCharts();
         }
 
         function changeLanguage() {
-            const lang = document.getElementById('lang-select').value;
+            const lang = document.getElementById('lang').value;
             localStorage.setItem('app_lang', lang);
             applyLanguage(lang);
             setGreeting(); 
             renderPresets();
             updateNicknameUI();
             updateStatusUI(); 
-            loadData();
+            updateSelectButtonsUI();
+            if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysisCharts();
+            else loadData();
         }
 
         function applyLanguage(lang) {
@@ -518,12 +518,21 @@
                 const ph = el.getAttribute('data-' + lang + '-ph');
                 if(ph) el.placeholder = ph;
             });
-            // 更新自訂按鈕顯示
             document.getElementById('custom-date-display').innerText = dateInput.value.replace(/-/g, '/');
-            const rVal = document.getElementById('analysis-range').value;
-            const rTextZh = rVal=='7'?'近 7 日':rVal=='30'?'近一個月':rVal=='180'?'近半年':'近一年';
-            const rTextEn = rVal=='7'?'Last 7 Days':rVal=='30'?'Last 30 Days':rVal=='180'?'Last 6 Months':'Last Year';
-            document.getElementById('range-display').innerText = lang === 'zh' ? rTextZh : rTextEn;
+        }
+
+        function updateSelectButtonsUI() {
+            const lang = getLang();
+            ['gender', 'activity', 'lang', 'theme', 'analysis-range'].forEach(id => {
+                const val = document.getElementById(id).value;
+                const opt = selectOpts[id].find(o => o.v === val);
+                if(opt && document.getElementById(id+'-btn')) {
+                    document.getElementById(id+'-btn').innerText = lang === 'zh' ? opt.zh : opt.en;
+                }
+                if(id === 'analysis-range' && document.getElementById('range-display')) {
+                    document.getElementById('range-display').innerText = lang === 'zh' ? opt.zh : opt.en;
+                }
+            });
         }
 
         function getLang() { return localStorage.getItem('app_lang') || 'zh'; }
@@ -566,21 +575,73 @@
             });
         }
 
-        // --- 暱稱與狀態 ---
-        function updateNickname() {
-            localStorage.setItem('nickname', document.getElementById('nickname').value);
-            updateNicknameUI();
+        // --- 自訂下拉選單 Modal ---
+        function openOptionsModal(type) {
+            const isZh = getLang() === 'zh';
+            const opts = selectOpts[type];
+            let title = '';
+            if(type==='gender') title = isZh?'選擇性別':'Select Gender';
+            if(type==='activity') title = isZh?'選擇活動係數':'Activity Level';
+            if(type==='lang') title = isZh?'選擇語言':'Select Language';
+            if(type==='theme') title = isZh?'選擇外觀模式':'Select Theme';
+            if(type==='analysis-range') title = isZh?'選擇分析區間':'Select Range';
+
+            let body = `<div style="display:flex; flex-direction:column; gap:10px;">`;
+            opts.forEach(opt => {
+                const text = isZh ? opt.zh : opt.en;
+                body += `<button class="btn-secondary" onclick="selectOption('${type}', '${opt.v}', '${text}')">${text}</button>`;
+            });
+            body += `</div>`;
+            openCustomModal(title, body, '', true);
         }
+
+        function selectOption(type, val, text) {
+            document.getElementById(type).value = val;
+            closeCustomModal();
+            updateSelectButtonsUI();
+            
+            if(type === 'gender' || type === 'activity') calculateBaseMetrics();
+            if(type === 'lang') changeLanguage();
+            if(type === 'theme') changeTheme();
+            if(type === 'analysis-range') renderAnalysisCharts();
+        }
+
+        // --- 暱稱與狀態 ---
+        function promptEditNickname() {
+            const isZh = getLang() === 'zh';
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                let current = localStorage.getItem('nickname') || '';
+                if(current === 'UnknownUser' || current === '匿名者') current = '';
+                let body = `<input type="text" id="tempNickname" value="${current}" placeholder="${isZh?'請輸入新暱稱':'Enter new nickname'}">`;
+                const footer = `
+                    <button class="btn-primary" style="margin-top:0;" onclick="submitNickname()">${isZh?'儲存':'Save'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
+                `;
+                openCustomModal(isZh?'修改暱稱':'Edit Nickname', body, footer, false);
+            }).then(name => {
+                if (name !== null) {
+                    localStorage.setItem('nickname', name);
+                    updateNicknameUI();
+                }
+            });
+        }
+        function submitNickname() {
+            const name = document.getElementById('tempNickname').value.trim();
+            closeCustomModal();
+            if (modalResolve) modalResolve(name);
+        }
+
         function updateNicknameUI() {
             let name = localStorage.getItem('nickname') || '';
             const isZh = getLang() === 'zh';
             if (!name || name === 'UnknownUser' || name === '匿名者') {
                 name = isZh ? '匿名者' : 'UnknownUser';
             }
-            document.getElementById('nickname').value = name;
+            document.getElementById('nickname-display').innerText = name;
         }
+
         function updateStatusUI() {
-            // 計算近7天平均表現
             let validDays = 0, sumDeficit = 0;
             for(let i = 0; i < 7; i++) {
                 const d = new Date(); d.setDate(d.getDate() - i);
@@ -596,7 +657,7 @@
             }
             
             const badge = document.getElementById('user-status');
-            badge.className = 'status-badge'; // reset
+            badge.className = 'status-badge'; 
             const isZh = getLang() === 'zh';
             
             if(validDays === 0) {
@@ -630,7 +691,7 @@
             el.classList.toggle('active');
         }
 
-        // --- 自訂日曆與選單 ---
+        // --- 自訂日曆 Grid ---
         let calCurrentMonth = new Date();
         function openCalendarModal() {
             calCurrentMonth = new Date(dateInput.value);
@@ -673,7 +734,7 @@
             const headerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <button onclick="changeCalMonth(-1)" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--accent-color);">❮</button>
-                    <div style="font-weight:bold; font-size:1.1em;">${title}</div>
+                    <div style="font-weight:bold; font-size:1.1em; color:var(--text-main);">${title}</div>
                     <button onclick="changeCalMonth(1)" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:var(--accent-color);">❯</button>
                 </div>
             `;
@@ -685,26 +746,7 @@
             dateInput.dispatchEvent(new Event('change'));
         }
 
-        function openRangeModal() {
-            const isZh = getLang() === 'zh';
-            const body = `
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <button class="btn-secondary" onclick="selectRange(7)">${isZh?'近 7 日':'Last 7 Days'}</button>
-                    <button class="btn-secondary" onclick="selectRange(30)">${isZh?'近一個月':'Last 30 Days'}</button>
-                    <button class="btn-secondary" onclick="selectRange(180)">${isZh?'近半年':'Last 6 Months'}</button>
-                    <button class="btn-secondary" onclick="selectRange(365)">${isZh?'近一年':'Last Year'}</button>
-                </div>
-            `;
-            openCustomModal(isZh?'選擇分析區間':'Select Range', body, '', true);
-        }
-        function selectRange(val) {
-            document.getElementById('analysis-range').value = val;
-            closeCustomModal();
-            applyLanguage(getLang()); // update button text
-            renderAnalysisCharts();
-        }
-
-        // --- 初始化 ---
+        // --- 核心初始化 ---
         window.onload = () => {
             initSettings();
             updateNicknameUI();
@@ -732,7 +774,8 @@
                 "專注於今天的選擇，結果自然會來。 ( •̀ ω •́ )✧", "餓的時候喝杯水，也許你只是渴了！ 🧊",
                 "相信過程，時間會給你最美的回報。 ⏳", "肚子有點餓？那是脂肪在燃燒的聲音！ 🔥",
                 "每一次拒絕誘惑，都是對自己的一次升級！ 🚀", "不要和別人比，和昨天的自己比就好。 🌱",
-                "運動完的暢快感，是什麼美食都比不上的！ 💦", "你比你想像的還要強大！ ฅ^•ﻌ•^ฅ"
+                "運動完的暢快感，是什麼美食都比不上的！ 💦", "你比你想像的還要強大！ ฅ^•ﻌ•^ฅ",
+                "讓今天的努力，成為明天的驚喜！ 🎁", "再堅持一秒鐘，你就在突破舒適圈！ (ง'̀-'́)ง"
             ],
             en: [
                 "Every drop of sweat fights the fat! (ง •_•)ง", "Keep going, your future self will thank you. (๑•̀ㅂ•́)و✧", 
@@ -744,9 +787,22 @@
                 "Focus on today's choices. ( •̀ ω •́ )✧", "Hungry? Maybe you're just thirsty! 🧊",
                 "Trust the process, time rewards effort. ⏳", "Hungry? That's the sound of burning fat! 🔥",
                 "Every 'No' to junk is a level up! 🚀", "Compare yourself only to your past self. 🌱",
-                "The post-workout feeling is better than any food! 💦", "You are stronger than you think! ฅ^•ﻌ•^ฅ"
+                "The post-workout feeling is better than any food! 💦", "You are stronger than you think! ฅ^•ﻌ•^ฅ",
+                "Let today's effort be tomorrow's surprise! 🎁", "One more second, and you break the comfort zone! (ง'̀-'́)ง"
             ]
         };
+
+        function setGreeting() {
+            const hour = new Date().getHours();
+            const greetingEl = document.getElementById('greeting');
+            let text = "晚安";
+            if(getLang() === 'en') {
+                if(hour < 12) text = "Good Morning"; else if(hour < 17) text = "Good Afternoon"; else text = "Good Evening";
+            } else {
+                if(hour < 11) text = "早安"; else if(hour < 17) text = "午安";
+            }
+            greetingEl.innerText = text; // 完全無 Emoji
+        }
 
         function showRandomQuote() {
             const list = quotes[getLang()];
@@ -754,7 +810,6 @@
             const bubble = document.getElementById('quote-bubble');
             bubble.innerText = q;
             
-            // Re-trigger animation
             bubble.classList.remove('show');
             void bubble.offsetWidth; 
             bubble.classList.add('show');
@@ -783,7 +838,7 @@
                 overlay.style.display = 'none';
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(tabId === 'analysis') { renderAnalysisCharts(); }
-            }, 500); // 確保 0.5 秒
+            }, 500); // 確保 0.5 秒完整看完腳印
         }
 
         function calculateBaseMetrics() {
@@ -920,6 +975,7 @@
 
         function loadData() {
             profileInputs.forEach(id => { if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id); });
+            updateSelectButtonsUI();
             
             const dateStr = dateInput.value;
             const todayStr = getLocalISODate(new Date());
@@ -1019,8 +1075,7 @@
                 const dateObj = new Date(dateInput.value); dateObj.setDate(dateObj.getDate() - i);
                 const dateStr = getLocalISODate(dateObj);
                 
-                if (range > 30 && i % Math.ceil(range/15) !== 0 && i !== 0 && i !== range - 1) { labels.push(''); } 
-                else { labels.push(dateStr.substring(5).replace('-','/')); }
+                labels.push(dateStr.substring(5).replace('-','/')); 
                 
                 const rec = JSON.parse(localStorage.getItem('record_' + dateStr));
                 if (rec && rec.isCheatDay) {
@@ -1041,7 +1096,7 @@
             
             if (validDays > 0) {
                 const avgDeficit = Math.round(sumDeficit / validDays), avgProtein = Math.round(sumProtein / validDays);
-                if (avgDeficit > 200) calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的缺口。控制得相當不錯！` : `Avg daily deficit of ${avgDeficit} kcal over ${validDays} days. Great job!`;
+                if (avgDeficit > 150) calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的缺口。控制得相當不錯！` : `Avg daily deficit of ${avgDeficit} kcal over ${validDays} days. Great job!`;
                 else if (avgDeficit >= 0) calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日缺口為 ${avgDeficit} 大卡。缺口偏小，可考慮微調。` : `Avg deficit of ${avgDeficit} kcal. Consider adjusting for faster results.`;
                 else calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日超標 ${Math.abs(avgDeficit)} 大卡。請多留意攝取！` : `Avg surplus of ${Math.abs(avgDeficit)} kcal. Watch your intake!`;
 
@@ -1059,28 +1114,30 @@
                 else wInsight.innerText = isZh ? `體重維持平穩。` : `Weight remains stable.`;
             } else { wInsight.innerText = isZh ? "期間內尚無足夠的體重紀錄。" : "Not enough weight records."; }
 
-            const pointRadius = range > 30 ? 0 : 3;
+            // 日期重疊問題完美解決：啟動自動跳過機制
+            const xTicksConfig = { autoSkip: true, maxTicksLimit: 6, maxRotation: 45, minRotation: 45 };
+
             if(calLineChartInst) calLineChartInst.destroy();
             if(proLineChartInst) proLineChartInst.destroy();
             if(weightLineChartInst) weightLineChartInst.destroy();
 
             const ctxCal = document.getElementById('calorieLineChart').getContext('2d');
             calLineChartInst = new Chart(ctxCal, {
-                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取熱量':'Intake', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'消耗額度':'Budget', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取熱量':'Intake', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: 2, spanGaps: true }, { label: isZh?'消耗額度':'Budget', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: 2, spanGaps: true } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: xTicksConfig } } }
             });
 
             const ctxPro = document.getElementById('proteinLineChart').getContext('2d');
             proLineChartInst = new Chart(ctxPro, {
-                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取蛋白質':'Intake', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'目標':'Target', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取蛋白質':'Intake', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: 2, spanGaps: true }, { label: isZh?'目標':'Target', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: 2, spanGaps: true } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: xTicksConfig } } }
             });
 
             const ctxWeight = document.getElementById('weightLineChart').getContext('2d');
             const mainColor = getComputedStyle(document.body).getPropertyValue('--text-main');
             weightLineChartInst = new Chart(ctxWeight, {
-                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'體重(kg)':'Weight', yAxisID: 'y', data: weightData, borderColor: mainColor, backgroundColor: mainColor, tension: 0.2, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'體脂(%)':'Body Fat', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: pointRadius, spanGaps: true } ] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } }, y: { type: 'linear', display: true, position: 'left', title: {display: true, text: isZh?'體重 (kg)':'Weight'} }, y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: isZh?'體脂 (%)':'Body Fat'} } } }
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'體重(kg)':'Weight', yAxisID: 'y', data: weightData, borderColor: mainColor, backgroundColor: mainColor, tension: 0.2, pointRadius: 2, spanGaps: true }, { label: isZh?'體脂(%)':'Body Fat', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: 2, spanGaps: true } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: xTicksConfig }, y: { type: 'linear', display: true, position: 'left', title: {display: true, text: isZh?'體重 (kg)':'Weight'} }, y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: isZh?'體脂 (%)':'Body Fat'} } } }
             });
         }
 
