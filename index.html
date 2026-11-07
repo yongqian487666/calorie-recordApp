@@ -22,7 +22,7 @@
             --input-bg: #faf6f0;   
         }
 
-        /* 深色模式變數 (優化對比度) */
+        /* 深色模式變數 */
         [data-theme="dark"] {
             --bg-color: #26211e;       
             --card-bg: #36302b;        
@@ -71,6 +71,7 @@
         .date-control { display: flex; align-items: center; justify-content: center; }
         .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
         .date-nav-btn:active { opacity: 0.5; }
+        .custom-date-btn { background: transparent; border: none; font-size: 16px; color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none; text-align: center; width: 105px; cursor: pointer; }
         
         .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
 
@@ -88,7 +89,7 @@
         
         .dashboard-info { display: flex; flex-direction: column; justify-content: center; }
         
-        /* 輕微晃動動畫 (4秒抖一次) */
+        /* 輕微晃動動畫 */
         @keyframes slightJiggle {
             0%, 90% { transform: rotate(0deg); }
             92% { transform: rotate(-2deg); }
@@ -113,6 +114,8 @@
         .macro-row { display: flex; justify-content: space-between; padding: 15px 0 0 0; font-size: 0.95em; font-weight: bold; }
         
         .analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .custom-range-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 0.9em; }
+        .custom-range-btn:active { opacity: 0.7; }
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
 
         /* Q&A 手風琴 */
@@ -148,7 +151,7 @@
         .cal-cell.today { background: var(--accent-sub); color: white; }
         .cal-cell.selected { background: var(--accent-color); color: white; }
 
-        /* 表單與按鈕 (自訂 UI) */
+        /* 表單與按鈕 */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
         input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
         input:focus { outline: none; border-color: var(--accent-color); }
@@ -205,7 +208,7 @@
         </div>
         <div class="date-control">
             <button class="date-nav-btn" onclick="changeDate(-1)">❮</button>
-            <button class="custom-select-btn inline" style="border:none; background:transparent;" id="custom-date-display" onclick="openCalendarModal()">2026/11/07</button>
+            <button class="custom-date-btn" id="custom-date-display" onclick="openCalendarModal()">2026/11/07</button>
             <button class="date-nav-btn" onclick="changeDate(1)">❯</button>
         </div>
     </div>
@@ -328,7 +331,11 @@
         <div id="page-analysis" class="page">
             <div class="analysis-header">
                 <h2 style="margin:0;" class="lang-txt" data-zh="趨勢分析" data-en="Analytics">趨勢分析</h2>
-                <button class="custom-select-btn inline" id="range-display" onclick="openOptionsModal('analysis-range')">近 7 日</button>
+                <!-- 使用自訂選單取代原生select -->
+                <button class="custom-range-btn" onclick="openOptionsModal('analysis-range')">
+                    <span id="range-display" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</span>
+                    <span style="font-size: 0.8em; margin-left: 5px;">▼</span>
+                </button>
             </div>
             
             <div class="card">
@@ -549,16 +556,20 @@
             else { header.classList.remove('has-close'); closeBtn.style.display = 'none'; }
             document.getElementById('customModalOverlay').classList.add('active');
         }
-        function closeCustomModal(e) {
+        function closeCustomModal(e, resolveValue = null) {
             if(e) e.stopPropagation();
             document.getElementById('customModalOverlay').classList.remove('active');
-            if (modalResolve) { modalResolve(null); modalResolve = null; }
+            if (modalResolve) {
+                const resolve = modalResolve;
+                modalResolve = null;
+                resolve(resolveValue);
+            }
         }
         function customAlert(title, message) {
             return new Promise(resolve => {
                 modalResolve = resolve;
                 const btnText = getLang() === 'zh' ? '確定' : 'OK';
-                const footer = `<button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">${btnText}</button>`;
+                const footer = `<button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(null, true)">${btnText}</button>`;
                 openCustomModal(title, message, footer, false);
             });
         }
@@ -568,8 +579,8 @@
                 const okText = getLang() === 'zh' ? '確定' : 'Confirm';
                 const cancelText = getLang() === 'zh' ? '取消' : 'Cancel';
                 const footer = `
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">${okText}</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(false)">${cancelText}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(null, true)">${okText}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(null, false)">${cancelText}</button>
                 `;
                 openCustomModal(title, message, footer, false);
             });
@@ -589,13 +600,13 @@
             let body = `<div style="display:flex; flex-direction:column; gap:10px;">`;
             opts.forEach(opt => {
                 const text = isZh ? opt.zh : opt.en;
-                body += `<button class="btn-secondary" onclick="selectOption('${type}', '${opt.v}', '${text}')">${text}</button>`;
+                body += `<button class="btn-secondary" onclick="selectOption('${type}', '${opt.v}')">${text}</button>`;
             });
             body += `</div>`;
             openCustomModal(title, body, '', true);
         }
 
-        function selectOption(type, val, text) {
+        function selectOption(type, val) {
             document.getElementById(type).value = val;
             closeCustomModal();
             updateSelectButtonsUI();
@@ -616,7 +627,7 @@
                 let body = `<input type="text" id="tempNickname" value="${current}" placeholder="${isZh?'請輸入新暱稱':'Enter new nickname'}">`;
                 const footer = `
                     <button class="btn-primary" style="margin-top:0;" onclick="submitNickname()">${isZh?'儲存':'Save'}</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(null, null)">${isZh?'取消':'Cancel'}</button>
                 `;
                 openCustomModal(isZh?'修改暱稱':'Edit Nickname', body, footer, false);
             }).then(name => {
@@ -628,8 +639,7 @@
         }
         function submitNickname() {
             const name = document.getElementById('tempNickname').value.trim();
-            closeCustomModal();
-            if (modalResolve) modalResolve(name);
+            closeCustomModal(null, name);
         }
 
         function updateNicknameUI() {
@@ -680,16 +690,14 @@
         function showStatusTooltip() {
             const bubble = document.getElementById('status-bubble');
             const isZh = getLang() === 'zh';
-            bubble.innerText = isZh ? '資訊來自近期分析趨勢' : 'Based on recent trends';
+            bubble.innerText = isZh ? '資訊來自近期趨勢' : 'Based on recent trends';
             bubble.classList.add('show');
             clearTimeout(statusTimeout);
             statusTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 2000);
         }
 
         // --- Q&A 摺疊 ---
-        function toggleQA(el) {
-            el.classList.toggle('active');
-        }
+        function toggleQA(el) { el.classList.toggle('active'); }
 
         // --- 自訂日曆 Grid ---
         let calCurrentMonth = new Date();
@@ -766,29 +774,37 @@
         const quotes = {
             zh: [
                 "每一滴汗水都是對抗脂肪的子彈！ (ง •_•)ง", "堅持下去，昨天的你會感謝今天的你。(๑•̀ㅂ•́)و✧", 
-                "自律給你真正的自由！ ✨", "慢慢來，比較快。這是一場馬拉松。 🏃‍♂️", 
-                "你吃進去的每一口，都在塑造未來的自己。 (OwO)", "少吃一口，多走一步，目標就在不遠處！ 🎯", 
-                "今天是變得更好的一天！ (≧▽≦)", "感受身體的變化，這才是最真實的進步。 💪",
-                "別氣餒，減脂是呈波浪狀下降的！ 🌊", "再撐一下，衣服會告訴你答案的！ 👗",
-                "喝口水，深呼吸，你做得很棒！ 💧", "偶爾放縱沒關係，重要的是隔天繼續努力！ 🌟",
-                "專注於今天的選擇，結果自然會來。 ( •̀ ω •́ )✧", "餓的時候喝杯水，也許你只是渴了！ 🧊",
-                "相信過程，時間會給你最美的回報。 ⏳", "肚子有點餓？那是脂肪在燃燒的聲音！ 🔥",
-                "每一次拒絕誘惑，都是對自己的一次升級！ 🚀", "不要和別人比，和昨天的自己比就好。 🌱",
-                "運動完的暢快感，是什麼美食都比不上的！ 💦", "你比你想像的還要強大！ ฅ^•ﻌ•^ฅ",
-                "讓今天的努力，成為明天的驚喜！ 🎁", "再堅持一秒鐘，你就在突破舒適圈！ (ง'̀-'́)ง"
+                "自律給你真正的自由！ (｀・ω・´)", "慢慢來，比較快。這是一場馬拉松。 ( ¯꒳¯ )", 
+                "你吃進去的每一口，都在塑造未來的自己。 (OwO)", "少吃一口，多走一步，目標就在不遠處！ (☆▽☆)", 
+                "今天是變得更好的一天！ (≧▽≦)", "感受身體的變化，這才是最真實的進步。 (UwU)",
+                "別氣餒，減脂是呈波浪狀下降的！ ( ˙꒳​˙ )", "再撐一下，衣服會告訴你答案的！ (o^▽^o)",
+                "喝口水，深呼吸，你做得很棒！ ( ´ ▽ ` )", "偶爾放縱沒關係，重要的是隔天繼續努力！ (*^▽^*)",
+                "專注於今天的選擇，結果自然會來。 ( •̀ ω •́ )✧", "餓的時候喝杯水，也許你只是渴了！ (¯▿¯)",
+                "相信過程，時間會給你最美的回報。 ( ﾟ▽ﾟ)/", "肚子有點餓？那是脂肪在燃燒的聲音！ (*/ω＼*)",
+                "每一次拒絕誘惑，都是對自己的一次升級！ (ง'̀-'́)ง", "不要和別人比，和昨天的自己比就好。 (￣▽￣)",
+                "運動完的暢快感，是什麼美食都比不上的！ ฅ^•ﻌ•^ฅ", "你比你想像的還要強大！ (๑˃ᴗ˂)ﻭ",
+                "讓今天的努力，成為明天的驚喜！ ٩(◕‿◕｡)۶", "再堅持一秒鐘，你就在突破舒適圈！ ( ˘ ³˘)",
+                "今天也是充滿活力的一天呢！ (ﾉ◕ヮ◕)ﾉ", "流下的汗水，都是脂肪的眼淚！ ( ಠ ͜ʖ ಠ)",
+                "吃得健康，身體會用好氣色回報你！ (´｡• ᵕ •｡`)", "不要急著看結果，享受變健康的過程吧！ (o˘◡˘o)",
+                "稍微動一動，心情也會變好喔！ ᕕ( ᐛ )ᕗ", "把每個小進步都當成勝利來慶祝！ (ﾉ´ヮ`)ﾉ",
+                "現在的克制，是為了未來的自信！ (b ᵔ▽ᵔ)b", "相信自己，你一定做得到！ (๑•̀ㅂ•́)و"
             ],
             en: [
                 "Every drop of sweat fights the fat! (ง •_•)ง", "Keep going, your future self will thank you. (๑•̀ㅂ•́)و✧", 
-                "Discipline equals true freedom! ✨", "Slow and steady wins the race. 🏃‍♂️", 
-                "You are what you eat. (OwO)", "Eat less, move more, target in sight! 🎯", 
-                "Today is a great day to improve! (≧▽≦)", "Feel the changes in your body! 💪",
-                "Don't give up, weight loss is non-linear! 🌊", "Hold on, your clothes will tell the truth! 👗",
-                "Drink water, breathe, you're doing great! 💧", "Cheat meals are fine, consistency is key! 🌟",
-                "Focus on today's choices. ( •̀ ω •́ )✧", "Hungry? Maybe you're just thirsty! 🧊",
-                "Trust the process, time rewards effort. ⏳", "Hungry? That's the sound of burning fat! 🔥",
-                "Every 'No' to junk is a level up! 🚀", "Compare yourself only to your past self. 🌱",
-                "The post-workout feeling is better than any food! 💦", "You are stronger than you think! ฅ^•ﻌ•^ฅ",
-                "Let today's effort be tomorrow's surprise! 🎁", "One more second, and you break the comfort zone! (ง'̀-'́)ง"
+                "Discipline equals true freedom! (｀・ω・´)", "Slow and steady wins the race. ( ¯꒳¯ )", 
+                "You are what you eat. (OwO)", "Eat less, move more, target in sight! (☆▽☆)", 
+                "Today is a great day to improve! (≧▽≦)", "Feel the changes in your body! (UwU)",
+                "Don't give up, weight loss is non-linear! ( ˙꒳​˙ )", "Hold on, your clothes will tell the truth! (o^▽^o)",
+                "Drink water, breathe, you're doing great! ( ´ ▽ ` )", "Cheat meals are fine, consistency is key! (*^▽^*)",
+                "Focus on today's choices. ( •̀ ω •́ )✧", "Hungry? Maybe you're just thirsty! (¯▿¯)",
+                "Trust the process, time rewards effort. ( ﾟ▽ﾟ)/", "Hungry? That's the sound of burning fat! (*/ω＼*)",
+                "Every 'No' to junk is a level up! (ง'̀-'́)ง", "Compare yourself only to your past self. (￣▽￣)",
+                "The post-workout feeling is better than any food! ฅ^•ﻌ•^ฅ", "You are stronger than you think! (๑˃ᴗ˂)ﻭ",
+                "Let today's effort be tomorrow's surprise! ٩(◕‿◕｡)۶", "One more second, and you break the comfort zone! ( ˘ ³˘)",
+                "Today is full of energy! (ﾉ◕ヮ◕)ﾉ", "Sweat is just fat crying! ( ಠ ͜ʖ ಠ)",
+                "Eat well, and your body will reward you! (´｡• ᵕ •｡`)", "Enjoy the journey to becoming healthier! (o˘◡˘o)",
+                "A little movement can boost your mood! ᕕ( ᐛ )ᕗ", "Celebrate every small victory! (ﾉ´ヮ`)ﾉ",
+                "Today's restraint is tomorrow's confidence! (b ᵔ▽ᵔ)b", "Believe in yourself, you can do it! (๑•̀ㅂ•́)و"
             ]
         };
 
@@ -801,7 +817,7 @@
             } else {
                 if(hour < 11) text = "早安"; else if(hour < 17) text = "午安";
             }
-            greetingEl.innerText = text; // 完全無 Emoji
+            greetingEl.innerText = text; 
         }
 
         function showRandomQuote() {
@@ -825,7 +841,6 @@
             dateInput.dispatchEvent(new Event('change'));
         }
 
-        // --- 0.5秒 貓咪腳印讀取切換 ---
         function switchTab(tabId) {
             const overlay = document.getElementById('loading-overlay');
             overlay.style.display = 'flex';
@@ -838,7 +853,7 @@
                 overlay.style.display = 'none';
                 document.getElementById('page-' + tabId).classList.add('active');
                 if(tabId === 'analysis') { renderAnalysisCharts(); }
-            }, 500); // 確保 0.5 秒完整看完腳印
+            }, 500);
         }
 
         function calculateBaseMetrics() {
@@ -901,7 +916,7 @@
                 `;
                 const footer = `
                     <button class="btn-primary" style="margin-top:0;" onclick="submitPreset('${type}')">${isZh?'新增':'Add'}</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(null, null)">${isZh?'取消':'Cancel'}</button>
                 `;
                 openCustomModal(type === 'meal' ? (isZh?'新增常吃餐點':'Add Meal Preset') : (isZh?'新增常規運動':'Add Workout Preset'), body, footer, false);
             }).then(data => {
@@ -913,12 +928,11 @@
         }
 
         function submitPreset(type) {
-            const name = document.getElementById('presetName').value;
+            const name = document.getElementById('presetName').value.trim();
             const cal = parseInt(document.getElementById('presetCal').value) || 0;
             if(!name) { customAlert(getLang()==='zh'?'錯誤':'Error', getLang()==='zh'?'請輸入名稱':'Please enter a name'); return; }
             let pro = type === 'meal' ? (parseInt(document.getElementById('presetPro').value) || 0) : 0;
-            closeCustomModal();
-            if(modalResolve) modalResolve({ name, cal, pro });
+            closeCustomModal(null, { name, cal, pro });
         }
 
         async function deletePreset(type, index) {
@@ -937,10 +951,10 @@
                 modalResolve = resolve;
                 const body = isZh ? `要將「${m.name}」加入哪一餐？` : `Add "${m.name}" to which meal?`;
                 const footer = `
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('1')">${isZh?'早餐':'Breakfast'}</button>
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('2')">${isZh?'午餐':'Lunch'}</button>
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('3')">${isZh?'晚餐':'Dinner'}</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(null, '1')">${isZh?'早餐':'Breakfast'}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(null, '2')">${isZh?'午餐':'Lunch'}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(null, '3')">${isZh?'晚餐':'Dinner'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(null, null)">${isZh?'取消':'Cancel'}</button>
                 `;
                 openCustomModal(isZh?'選擇餐期':'Select Meal', body, footer, true);
             });
@@ -1114,8 +1128,8 @@
                 else wInsight.innerText = isZh ? `體重維持平穩。` : `Weight remains stable.`;
             } else { wInsight.innerText = isZh ? "期間內尚無足夠的體重紀錄。" : "Not enough weight records."; }
 
-            // 日期重疊問題完美解決：啟動自動跳過機制
-            const xTicksConfig = { autoSkip: true, maxTicksLimit: 6, maxRotation: 45, minRotation: 45 };
+            // 自動跳躍標籤以防重疊
+            const xTicksConfig = { autoSkip: true, maxTicksLimit: 7, maxRotation: 45, minRotation: 45 };
 
             if(calLineChartInst) calLineChartInst.destroy();
             if(proLineChartInst) proLineChartInst.destroy();
