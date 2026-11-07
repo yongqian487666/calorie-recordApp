@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
+        /* 預設淺色模式 (暖色系) */
         :root {
             --bg-color: #f7f3e8;       
             --card-bg: #ece3d1;        
@@ -20,9 +21,20 @@
             --border-color: #dfd5c4;   
         }
 
-        /* 隱藏所有瀏覽器的滾動條 */
+        /* 深色模式變數 */
+        [data-theme="dark"] {
+            --bg-color: #2c2724;       
+            --card-bg: #38312c;        
+            --text-main: #e8dfd3;      
+            --text-sub: #a89f91;       
+            --accent-color: #c86b3c;   
+            --accent-sub: #8b6b55;     
+            --ring-empty: #524a43;     
+            --border-color: #4a423a;   
+        }
+
         ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; transition: background-color 0.3s, color 0.3s; }
 
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -30,64 +42,69 @@
             margin: 0; padding: 0; padding-bottom: 80px; 
         }
 
-        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
-        .page { display: none; animation: fadeIn 0.3s ease; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; position: relative; }
+        .page { display: none; animation: fadeIn 0.2s ease; }
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 頂部 Header 與 泡泡提示 */
-        .global-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto;
+        /* --- 讀取畫面 Loader (腳印動畫) --- */
+        #loading-overlay {
+            display: none; 
+            position: fixed; 
+            top: 75px; /* 閃過頂部 Header */
+            left: 0; 
+            right: 0; 
+            bottom: 75px; /* 閃過底部導覽列 */
+            background: var(--bg-color); 
+            z-index: 50; 
+            align-items: center; 
+            justify-content: center;
         }
+        .loader {
+            width: calc(6*30px);
+            height: 50px;
+            display: flex;
+            color: var(--accent-color); /* 自動跟隨系統暖色系/深色系重點色 */
+            filter: drop-shadow(30px 25px 0 currentColor) drop-shadow(60px 0 0 currentColor) drop-shadow(120px 0 0 currentColor);
+            clip-path: inset(0 100% 0 0);
+            animation: l12 0.8s infinite steps(7); /* 調快速度以適應 0.25 秒的短暫切換 */
+        }
+        .loader:before {
+            content: "";
+            width: 30px;
+            height: 25px;
+            --c: no-repeat radial-gradient(farthest-side,currentColor 92%,#0000);
+            background: 
+                var(--c) left /70% 70%,
+                var(--c) right/20% 20%,
+                var(--c) top    0 right 15%/20% 20%,
+                var(--c) bottom 0 right 15%/20% 20%;
+        }
+        @keyframes l12 { 100% {clip-path: inset(0 -30px 0 0)} }
+
+        /* 頂部 Header 與 泡泡提示 */
+        .global-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto; height: 45px; box-sizing: border-box; }
         
-        .greeting-container { position: relative; display: flex; align-items: center; }
-        .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; transition: opacity 0.2s; }
+        .greeting-container { position: relative; display: flex; align-items: center; gap: 8px; }
+        .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; }
         .greeting-container h1:active { opacity: 0.6; }
         
-        /* 鼓勵語泡泡設計 */
+        .streak-badge { background: #d9534f; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; box-shadow: 0 2px 5px rgba(217,83,79,0.3); }
+        
         .quote-bubble {
-            position: absolute;
-            top: 120%;
-            left: 0;
-            background: var(--accent-color);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 16px;
-            border-top-left-radius: 0; /* 氣球尖角效果 */
-            font-size: 0.9em;
-            font-weight: bold;
-            line-height: 1.4;
-            width: max-content;
-            max-width: 250px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 100;
+            position: absolute; top: 120%; left: 0; background: var(--accent-color); color: white; padding: 10px 15px; border-radius: 16px; border-top-left-radius: 0;
+            font-size: 0.9em; font-weight: bold; line-height: 1.4; width: max-content; max-width: 250px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
         }
-        .quote-bubble.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
+        .quote-bubble.show { opacity: 1; visibility: visible; transform: translateY(0); }
 
         .date-control { display: flex; align-items: center; justify-content: center; }
         .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
         .date-nav-btn:active { opacity: 0.5; }
-        .date-picker { 
-            background: transparent; border: none; font-size: 16px; 
-            color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none;
-            text-align: center; text-align-last: center; width: 135px; 
-        }
+        .date-picker { background: transparent; border: none; font-size: 16px; color: var(--text-sub); font-weight: bold; padding: 0 5px; outline: none; text-align: center; text-align-last: center; width: 135px; }
 
-        .card { 
-            background: var(--card-bg); padding: 20px; border-radius: 20px; 
-            margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
 
-        /* 雙缺口面板 */
         .deficits-wrapper { display: flex; gap: 10px; margin-bottom: 20px; }
         .deficit-board { flex: 1; color: white; text-align: center; padding: 15px 10px; border-radius: 16px; }
         .deficit-board h1 { margin: 5px 0; font-size: 1.8em; }
@@ -95,14 +112,9 @@
         .board-total:active { opacity: 0.8; }
         .board-today { background: var(--accent-sub); } 
 
-        /* 圓環圖與儀表板 */
         .dashboard { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
         .ring-wrapper { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
-        .ring-chart {
-            width: 100%; height: 100%; border-radius: 50%;
-            background: conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0);
-            display: flex; align-items: center; justify-content: center;
-        }
+        .ring-chart { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0); display: flex; align-items: center; justify-content: center; }
         .ring-chart::before { content: ""; width: 76px; height: 76px; background: var(--card-bg); border-radius: 50%; }
         
         .dashboard-info { display: flex; flex-direction: column; justify-content: center; }
@@ -125,16 +137,14 @@
         .range-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-weight: bold; outline: none; }
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
 
-        /* 全域 Modal 遮罩 */
+        /* 全域 Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--bg-color); width: 100%; max-width: 360px; max-height: 75vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; box-sizing: border-box; }
-        
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
         .modal-header h3 { margin: 0; color: var(--text-main); font-size: 1.2em; text-align: center; width: 100%; }
         .modal-header.has-close h3 { text-align: left; }
         .close-btn { background: none; border: none; font-size: 1.5em; color: var(--text-sub); cursor: pointer; padding: 0; line-height: 1; }
-        
         .history-list { overflow-y: auto; flex: 1; padding-right: 5px; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); color: var(--text-main); font-weight: bold; }
         .history-item:last-child { border-bottom: none; }
@@ -143,14 +153,13 @@
 
         /* 表單與按鈕 */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
-        input, select:not(.range-select) { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #faf6f0; color: var(--text-main); }
-        input:focus { outline: none; border-color: var(--accent-color); }
-        
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--bg-color); color: var(--text-main); }
+        input:focus, select:focus { outline: none; border-color: var(--accent-color); }
         button.btn-primary { width: 100%; padding: 16px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.2s; }
-        button.btn-secondary { width: 100%; padding: 16px; background: #d3c4b1; color: var(--text-main); border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+        button.btn-secondary { width: 100%; padding: 16px; background: var(--ring-empty); color: var(--text-main); border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
         button.btn-danger { width: 100%; padding: 16px; background: #d9534f; color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
 
-        /* 常吃餐點/常規運動 快捷鍵 */
+        /* 快捷鍵 */
         .preset-section { margin-top: 30px; border-top: 1px dashed var(--border-color); padding-top: 20px; }
         .preset-title { font-size: 1em; color: var(--text-main); margin: 0 0 10px 0; }
         .chip-container { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -160,7 +169,7 @@
         .chip-add { background: transparent; border: 1px dashed var(--accent-color); color: var(--accent-color); }
 
         /* 底部導覽列 */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-color); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 100; height: 75px; box-sizing: border-box; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-sub); background: none; border: none; font-size: 0.8em; cursor: pointer; padding: 5px 15px; }
         .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
         .nav-item.active { color: var(--accent-color); font-weight: bold; }
@@ -168,12 +177,12 @@
         .nav-center svg { width: 26px; height: 26px; fill: white; }
     </style>
 </head>
-<body>
+<body data-theme="light">
 
     <div class="global-header">
         <div class="greeting-container">
-            <h1 id="greeting" onclick="showRandomQuote()">晚安</h1>
-            <!-- 隱藏的泡泡元件 -->
+            <h1 id="greeting" onclick="showRandomQuote()">晚安 <span style="font-size: 0.8em; margin-left: 2px;">💬</span></h1>
+            <div id="streak-badge" class="streak-badge">🔥 連續 0 天</div>
             <div id="quote-bubble" class="quote-bubble"></div>
         </div>
         <div class="date-control">
@@ -183,29 +192,35 @@
         </div>
     </div>
 
+    <!-- 腳印讀取遮罩層 -->
+    <div id="loading-overlay">
+        <div class="loader"></div>
+    </div>
+
     <div class="container">
         <!-- 第1頁：身體 -->
         <div id="page-tdee" class="page">
-            <h2 style="margin-top:0;">我的身體數值</h2>
+            <h2 style="margin-top:0;" class="lang-txt" data-zh="我的身體數值" data-en="My Body Metrics">我的身體數值</h2>
             <div class="card">
                 <div style="text-align: center; margin-bottom: 15px;">
-                    <div style="color: var(--text-sub); font-size: 0.9em;">目前的 TDEE (每日總消耗)</div>
+                    <div style="color: var(--text-sub); font-size: 0.9em;" class="lang-txt" data-zh="目前的 TDEE (每日總消耗)" data-en="Current TDEE">目前的 TDEE (每日總消耗)</div>
                     <div style="font-size: 2.5em; font-weight: bold; color: var(--accent-color);" id="tdee-value">0</div>
-                    <div style="color: var(--text-sub); font-size: 0.9em;">建議蛋白質目標: <span id="protein-target-display">0</span> g</div>
+                    <div style="color: var(--text-sub); font-size: 0.9em;" id="protein-target-text">建議蛋白質目標: <span id="protein-target-display">0</span> g</div>
                 </div>
-                <label>性別</label><select id="gender"><option value="M">男性</option><option value="F">女性</option></select>
-                <label>年齡</label><input type="number" id="age" value="22">
-                <label>身高 (cm)</label><input type="number" id="height" value="173">
-                <label>體重 (kg)</label><input type="number" id="weight" value="67">
-                <label>體脂率 (%)</label><input type="number" id="bodyfat" value="" placeholder="選填 (有量再填)">
-                <label>活動係數</label>
+                <label class="lang-txt" data-zh="性別" data-en="Gender">性別</label>
+                <select id="gender"><option value="M" class="lang-txt" data-zh="男性" data-en="Male">男性</option><option value="F" class="lang-txt" data-zh="女性" data-en="Female">女性</option></select>
+                <label class="lang-txt" data-zh="年齡" data-en="Age">年齡</label><input type="number" id="age" value="22">
+                <label class="lang-txt" data-zh="身高 (cm)" data-en="Height (cm)">身高 (cm)</label><input type="number" id="height" value="173">
+                <label class="lang-txt" data-zh="體重 (kg)" data-en="Weight (kg)">體重 (kg)</label><input type="number" id="weight" value="67">
+                <label class="lang-txt" data-zh="體脂率 (%)" data-en="Body Fat (%)">體脂率 (%)</label><input type="number" id="bodyfat" value="" placeholder="選填 (有量再填)">
+                <label class="lang-txt" data-zh="活動係數" data-en="Activity Level">活動係數</label>
                 <select id="activity">
-                    <option value="1.2">久坐 (幾乎不運動)</option>
-                    <option value="1.375">輕度活動 (每週運動1-3天)</option>
-                    <option value="1.55">中度活動 (每週運動3-5天)</option>
-                    <option value="1.725">高度活動 (每週運動6-7天)</option>
+                    <option value="1.2" class="lang-txt" data-zh="久坐 (幾乎不運動)" data-en="Sedentary">久坐 (幾乎不運動)</option>
+                    <option value="1.375" class="lang-txt" data-zh="輕度活動 (每週運動1-3天)" data-en="Lightly Active">輕度活動 (每週運動1-3天)</option>
+                    <option value="1.55" class="lang-txt" data-zh="中度活動 (每週運動3-5天)" data-en="Moderately Active">中度活動 (每週運動3-5天)</option>
+                    <option value="1.725" class="lang-txt" data-zh="高度活動 (每週運動6-7天)" data-en="Very Active">高度活動 (每週運動6-7天)</option>
                 </select>
-                <button class="btn-primary" style="margin-top: 20px;" onclick="saveProfileAndGoHome()">確認並返回</button>
+                <button class="btn-primary lang-txt" style="margin-top: 20px;" onclick="saveProfileAndGoHome()" data-zh="確認並返回" data-en="Save & Return">確認並返回</button>
             </div>
         </div>
 
@@ -213,11 +228,11 @@
         <div id="page-home" class="page active">
             <div class="deficits-wrapper">
                 <div class="deficit-board board-total" onclick="openHistoryModal()">
-                    <div style="font-size: 0.8em; opacity: 0.9;">總累計缺口</div>
+                    <div style="font-size: 0.8em; opacity: 0.9;" class="lang-txt" data-zh="總累計缺口" data-en="Total Deficit">總累計缺口</div>
                     <h1 id="total-deficit">0</h1>
                 </div>
                 <div class="deficit-board board-today">
-                    <div style="font-size: 0.8em; opacity: 0.9;">今日缺口</div>
+                    <div style="font-size: 0.8em; opacity: 0.9;" class="lang-txt" data-zh="今日缺口" data-en="Today's Deficit">今日缺口</div>
                     <h1 id="today-deficit">0</h1>
                 </div>
             </div>
@@ -226,33 +241,31 @@
                 <div class="dashboard" id="normal-dashboard">
                     <div class="ring-wrapper"><div class="ring-chart" id="calorie-ring" style="--p: 0%;"></div></div>
                     <div class="dashboard-info">
-                        <p class="text-top">大卡還可以吃</p>
+                        <p class="text-top lang-txt" data-zh="大卡還可以吃" data-en="kcal left">大卡還可以吃</p>
                         <h2 id="calories-left">0</h2>
                         <p id="calories-eaten-text" class="text-bottom">已吃 0 / 目標 0</p>
                     </div>
                 </div>
                 <div class="cheat-dashboard" id="cheat-dashboard">
-                    <h2>今日放縱日</h2>
-                    <p>缺口暫停計算，好好享受美食與休息！</p>
+                    <h2 class="lang-txt" data-zh="今日放縱日" data-en="Cheat Day">今日放縱日</h2>
+                    <p class="lang-txt" data-zh="缺口暫停計算，好好享受美食與休息！" data-en="Take a break! Deficit calculation paused.">缺口暫停計算，好好享受美食與休息！</p>
                 </div>
             </div>
 
             <div class="card" id="home-details">
-                <h3 style="margin-top:0;">當日攝取</h3>
+                <h3 style="margin-top:0;" class="lang-txt" data-zh="當日攝取" data-en="Daily Intake">當日攝取</h3>
                 <div class="chart-container"><canvas id="mealPieChart"></canvas></div>
                 
                 <div style="margin-top: 25px;">
                     <div class="progress-header">
-                        <span>蛋白質 Protein</span>
+                        <span class="lang-txt" data-zh="蛋白質 Protein" data-en="Protein">蛋白質 Protein</span>
                         <span id="protein-text-top" style="color: var(--text-sub);">0 / 0 g</span>
                     </div>
-                    <div class="progress-bg">
-                        <div class="progress-fill" id="protein-progress-fill" style="width: 0%;"></div>
-                    </div>
+                    <div class="progress-bg"><div class="progress-fill" id="protein-progress-fill" style="width: 0%;"></div></div>
                 </div>
 
                 <div class="macro-row">
-                    <span style="color: var(--text-main);">運動消耗 Exercise</span>
+                    <span style="color: var(--text-main);" class="lang-txt" data-zh="運動消耗 Exercise" data-en="Exercise">運動消耗 Exercise</span>
                     <span style="color: var(--text-sub);" id="exercise-display">0 kcal</span>
                 </div>
             </div>
@@ -260,78 +273,93 @@
 
         <!-- 第3頁：新增紀錄 -->
         <div id="page-record" class="page">
-            <h2 style="margin-top:0;">當日攝取與消耗</h2>
+            <h2 style="margin-top:0;" class="lang-txt" data-zh="當日攝取與消耗" data-en="Add Records">當日攝取與消耗</h2>
             
             <div class="card" id="record-form-container">
-                <label>早餐攝取 (大卡)</label><input type="number" id="breakfast" value="0">
-                <label>午餐攝取 (大卡)</label><input type="number" id="lunch" value="0">
-                <label>晚餐攝取 (大卡)</label><input type="number" id="dinner" value="0">
-                <label>蛋白質總攝取 (克)</label><input type="number" id="protein" value="0">
-                <label>額外運動消耗 (大卡)</label><input type="number" id="exercise" value="0">
+                <label class="lang-txt" data-zh="早餐攝取 (大卡)" data-en="Breakfast (kcal)">早餐攝取 (大卡)</label><input type="number" id="breakfast" value="0">
+                <label class="lang-txt" data-zh="午餐攝取 (大卡)" data-en="Lunch (kcal)">午餐攝取 (大卡)</label><input type="number" id="lunch" value="0">
+                <label class="lang-txt" data-zh="晚餐攝取 (大卡)" data-en="Dinner (kcal)">晚餐攝取 (大卡)</label><input type="number" id="dinner" value="0">
+                <label class="lang-txt" data-zh="蛋白質總攝取 (克)" data-en="Total Protein (g)">蛋白質總攝取 (克)</label><input type="number" id="protein" value="0">
+                <label class="lang-txt" data-zh="額外運動消耗 (大卡)" data-en="Exercise Burned (kcal)">額外運動消耗 (大卡)</label><input type="number" id="exercise" value="0">
                 
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
-                    <button class="btn-danger" style="flex: 1; padding: 12px; font-size: 1em;" onclick="toggleCheatDay(true)">今日放縱日</button>
-                    <button class="btn-primary" style="flex: 1;" id="save-btn" onclick="saveData()">儲存紀錄</button>
+                    <button class="btn-danger lang-txt" style="flex: 1; padding: 12px; font-size: 1em;" onclick="toggleCheatDay(true)" data-zh="今日放縱日" data-en="Cheat Day">今日放縱日</button>
+                    <button class="btn-primary lang-txt" style="flex: 1;" id="save-btn" onclick="saveData()" data-zh="儲存紀錄" data-en="Save">儲存紀錄</button>
                 </div>
 
                 <div class="preset-section">
-                    <h3 class="preset-title">常吃餐點 (點擊帶入)</h3>
+                    <h3 class="preset-title lang-txt" data-zh="常吃餐點 (點擊帶入)" data-en="Favorite Meals">常吃餐點 (點擊帶入)</h3>
                     <div class="chip-container" id="meal-presets"></div>
-                    
-                    <h3 class="preset-title" style="margin-top: 20px;">常規運動 (點擊帶入)</h3>
+                    <h3 class="preset-title lang-txt" style="margin-top: 20px;" data-zh="常規運動 (點擊帶入)" data-en="Favorite Workouts">常規運動 (點擊帶入)</h3>
                     <div class="chip-container" id="exercise-presets"></div>
                 </div>
             </div>
 
             <div class="card" id="cheat-view-container" style="display: none; text-align: center; padding: 40px 20px;">
-                <h3 style="color: var(--text-main); font-size: 1.5em; margin-bottom: 10px;">目前為放縱日模式</h3>
-                <p style="color: var(--text-sub); margin-bottom: 30px;">不需記錄細節，好好休息！</p>
-                <button class="btn-secondary" onclick="toggleCheatDay(false)">撤銷今日放縱日</button>
+                <h3 style="color: var(--text-main); font-size: 1.5em; margin-bottom: 10px;" class="lang-txt" data-zh="目前為放縱日模式" data-en="Cheat Day Active">目前為放縱日模式</h3>
+                <p style="color: var(--text-sub); margin-bottom: 30px;" class="lang-txt" data-zh="不需記錄細節，好好休息！" data-en="Rest well today!">不需記錄細節，好好休息！</p>
+                <button class="btn-secondary lang-txt" onclick="toggleCheatDay(false)" data-zh="撤銷今日放縱日" data-en="Cancel Cheat Day">撤銷今日放縱日</button>
             </div>
         </div>
 
         <!-- 第4頁：分析 -->
         <div id="page-analysis" class="page">
             <div class="analysis-header">
-                <h2 style="margin:0;">趨勢分析</h2>
+                <h2 style="margin:0;" class="lang-txt" data-zh="趨勢分析" data-en="Analytics">趨勢分析</h2>
                 <select id="analysis-range" class="range-select" onchange="renderAnalysisCharts()">
-                    <option value="7">近 7 日</option>
-                    <option value="30">近一個月</option>
-                    <option value="180">近半年</option>
-                    <option value="365">近一年</option>
+                    <option value="7" class="lang-txt" data-zh="近 7 日" data-en="Last 7 Days">近 7 日</option>
+                    <option value="30" class="lang-txt" data-zh="近一個月" data-en="Last 30 Days">近一個月</option>
+                    <option value="180" class="lang-txt" data-zh="近半年" data-en="Last 6 Months">近半年</option>
+                    <option value="365" class="lang-txt" data-zh="近一年" data-en="Last Year">近一年</option>
                 </select>
             </div>
             
             <div class="card">
-                <h3 style="font-size: 1em; text-align: center; margin-top: 0;">熱量攝取趨勢</h3>
+                <h3 style="font-size: 1em; text-align: center; margin-top: 0;" class="lang-txt" data-zh="熱量攝取趨勢" data-en="Calories Trend">熱量攝取趨勢</h3>
                 <div class="chart-container"><canvas id="calorieLineChart"></canvas></div>
                 <div class="insight-box" id="calorie-insight">讀取中...</div>
             </div>
             <div class="card">
-                <h3 style="font-size: 1em; text-align: center; margin-top: 0;">蛋白質攝取趨勢</h3>
+                <h3 style="font-size: 1em; text-align: center; margin-top: 0;" class="lang-txt" data-zh="蛋白質攝取趨勢" data-en="Protein Trend">蛋白質攝取趨勢</h3>
                 <div class="chart-container"><canvas id="proteinLineChart"></canvas></div>
                 <div class="insight-box" id="protein-insight">讀取中...</div>
             </div>
             <div class="card">
-                <h3 style="font-size: 1em; text-align: center; margin-top: 0;">體重與體脂趨勢</h3>
+                <h3 style="font-size: 1em; text-align: center; margin-top: 0;" class="lang-txt" data-zh="體重與體脂趨勢" data-en="Weight & Body Fat">體重與體脂趨勢</h3>
                 <div class="chart-container"><canvas id="weightLineChart"></canvas></div>
                 <div class="insight-box" id="weight-insight">讀取中...</div>
             </div>
         </div>
 
-        <!-- 第5頁：備份 -->
-        <div id="page-backup" class="page">
-            <h2 style="margin-top:0;">資料管理</h2>
+        <!-- 第5頁：設定 -->
+        <div id="page-settings" class="page">
+            <h2 style="margin-top:0;" class="lang-txt" data-zh="設定" data-en="Settings">設定</h2>
+            
             <div class="card">
-                <p style="color: var(--text-sub); font-size: 0.95em; line-height: 1.5;">換手機或重新安裝前，請先匯出備份檔案。</p>
-                <button class="btn-primary" onclick="exportData()">匯出備份</button>
+                <label class="lang-txt" data-zh="語言 / Language" data-en="Language">語言 / Language</label>
+                <select id="lang-select" onchange="changeLanguage()">
+                    <option value="zh">繁體中文</option>
+                    <option value="en">English</option>
+                </select>
+
+                <label class="lang-txt" data-zh="外觀模式" data-en="Theme">外觀模式</label>
+                <select id="theme-select" onchange="changeTheme()">
+                    <option value="light" class="lang-txt" data-zh="淺色模式 (Light)" data-en="Light Mode">淺色模式 (Light)</option>
+                    <option value="dark" class="lang-txt" data-zh="深色模式 (Dark)" data-en="Dark Mode">深色模式 (Dark)</option>
+                </select>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0;" class="lang-txt" data-zh="資料管理" data-en="Data Management">資料管理</h3>
+                <p style="color: var(--text-sub); font-size: 0.95em; line-height: 1.5;" class="lang-txt" data-zh="換手機或重新安裝前，請先匯出備份檔案。" data-en="Export data before changing devices.">換手機或重新安裝前，請先匯出備份檔案。</p>
+                <button class="btn-primary lang-txt" onclick="exportData()" data-zh="匯出備份" data-en="Export Data">匯出備份</button>
                 <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importData(event)">
-                <button class="btn-secondary" style="margin-top: 15px;" onclick="document.getElementById('importFile').click()">匯入備份</button>
+                <button class="btn-secondary lang-txt" style="margin-top: 15px;" onclick="document.getElementById('importFile').click()" data-zh="匯入備份" data-en="Import Data">匯入備份</button>
             </div>
         </div>
     </div>
 
-    <!-- 歷史紀錄與自訂提示視窗 -->
+    <!-- 自訂提示視窗 -->
     <div class="modal-overlay" id="customModalOverlay" onclick="closeCustomModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header" id="customModalHeader">
@@ -347,22 +375,22 @@
     <nav class="bottom-nav">
         <button class="nav-item" onclick="switchTab('tdee')" id="nav-tdee">
             <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            身體
+            <span class="lang-txt" data-zh="身體" data-en="Body">身體</span>
         </button>
         <button class="nav-item active" onclick="switchTab('home')" id="nav-home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            首頁
+            <span class="lang-txt" data-zh="首頁" data-en="Home">首頁</span>
         </button>
         <button class="nav-center" onclick="switchTab('record')" id="nav-record">
             <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         </button>
         <button class="nav-item" onclick="switchTab('analysis')" id="nav-analysis">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            分析
+            <span class="lang-txt" data-zh="分析" data-en="Trends">分析</span>
         </button>
-        <button class="nav-item" onclick="switchTab('backup')" id="nav-backup">
-            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-            備份
+        <button class="nav-item" onclick="switchTab('settings')" id="nav-settings">
+            <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+            <span class="lang-txt" data-zh="設定" data-en="Settings">設定</span>
         </button>
     </nav>
 
@@ -371,7 +399,7 @@
         Chart.register(ChartDataLabels);
 
         const dateInput = document.getElementById('date');
-        const profileInputs = ['gender', 'age', 'height', 'weight', 'bodyfat', 'activity'];
+        const profileInputs = ['gender', 'age', 'height', 'activity'];
         const logInputs = ['breakfast', 'lunch', 'dinner', 'exercise', 'protein'];
         
         let pieChartInst = null, calLineChartInst = null, proLineChartInst = null, weightLineChartInst = null;
@@ -379,45 +407,73 @@
         let exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
         let quoteTimeout = null;
 
-        Chart.defaults.color = '#8d7b68';
-        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        // --- 外觀與語言設定邏輯 ---
+        function initSettings() {
+            const savedTheme = localStorage.getItem('app_theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-select').value = savedTheme;
 
-        // --- 自訂暖色系 Modal 系統 ---
+            const savedLang = localStorage.getItem('app_lang') || 'zh';
+            document.getElementById('lang-select').value = savedLang;
+            applyLanguage(savedLang);
+        }
+
+        function changeTheme() {
+            const theme = document.getElementById('theme-select').value;
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('app_theme', theme);
+            if(document.getElementById('page-analysis').classList.contains('active')) renderAnalysisCharts();
+        }
+
+        function changeLanguage() {
+            const lang = document.getElementById('lang-select').value;
+            localStorage.setItem('app_lang', lang);
+            applyLanguage(lang);
+            loadData();
+        }
+
+        function applyLanguage(lang) {
+            document.querySelectorAll('.lang-txt').forEach(el => {
+                const txt = el.getAttribute('data-' + lang);
+                if(txt) el.innerText = txt;
+            });
+        }
+
+        function getLang() { return localStorage.getItem('app_lang') || 'zh'; }
+
+        // --- 自訂 Modal ---
         let modalResolve = null;
-
         function openCustomModal(title, bodyHTML, footerHTML, showClose = true) {
             document.getElementById('customModalTitle').innerText = title;
             document.getElementById('customModalBody').innerHTML = bodyHTML;
             document.getElementById('customModalFooter').innerHTML = footerHTML;
-            
             const header = document.getElementById('customModalHeader');
             const closeBtn = document.getElementById('customModalCloseBtn');
             if(showClose) { header.classList.add('has-close'); closeBtn.style.display = 'block'; } 
             else { header.classList.remove('has-close'); closeBtn.style.display = 'none'; }
-            
             document.getElementById('customModalOverlay').classList.add('active');
         }
-
         function closeCustomModal(e) {
             if(e) e.stopPropagation();
             document.getElementById('customModalOverlay').classList.remove('active');
             if (modalResolve) { modalResolve(null); modalResolve = null; }
         }
-
         function customAlert(title, message) {
             return new Promise(resolve => {
                 modalResolve = resolve;
-                const footer = `<button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">確定</button>`;
+                const btnText = getLang() === 'zh' ? '確定' : 'OK';
+                const footer = `<button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">${btnText}</button>`;
                 openCustomModal(title, message, footer, false);
             });
         }
-
         function customConfirm(title, message) {
             return new Promise(resolve => {
                 modalResolve = resolve;
+                const okText = getLang() === 'zh' ? '確定' : 'Confirm';
+                const cancelText = getLang() === 'zh' ? '取消' : 'Cancel';
                 const footer = `
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">確定</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(false)">取消</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(true)">${okText}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(false)">${cancelText}</button>
                 `;
                 openCustomModal(title, message, footer, false);
             });
@@ -425,31 +481,39 @@
 
         // --- 初始化 ---
         window.onload = () => {
-            const today = new Date().toISOString().split('T')[0];
+            initSettings();
+            const today = getLocalISODate(new Date());
             dateInput.value = today;
             setGreeting();
             renderPresets();
             loadData();
         };
 
+        function getLocalISODate(dateObj) {
+            const offset = dateObj.getTimezoneOffset();
+            return new Date(dateObj.getTime() - (offset*60*1000)).toISOString().split('T')[0];
+        }
+
         function setGreeting() {
             const hour = new Date().getHours();
             const greetingEl = document.getElementById('greeting');
             let text = "晚安";
-            if(hour < 11) text = "早安";
-            else if(hour < 17) text = "午安";
-            greetingEl.innerText = text;
+            if(getLang() === 'en') {
+                if(hour < 12) text = "Good Morning"; else if(hour < 17) text = "Good Afternoon"; else text = "Good Evening";
+            } else {
+                if(hour < 11) text = "早安"; else if(hour < 17) text = "午安";
+            }
+            greetingEl.innerHTML = text + ' <span style="font-size: 0.8em; margin-left: 2px;">💬</span>';
         }
 
-        const quotes = [
-            "每一滴汗水都是對抗脂肪的子彈！", "堅持下去，昨天的你會感謝今天的你。",
-            "自律給你真正的自由！", "慢慢來，比較快。這是一場馬拉松。",
-            "你吃進去的每一口，都在塑造未來的自己。", "少吃一口，多走一步，目標就在不遠處！",
-            "今天是變得更好的一天！", "感受身體的變化，這才是最真實的進步。"
-        ];
+        const quotes = {
+            zh: ["每一滴汗水都是對抗脂肪的子彈！", "堅持下去，昨天的你會感謝今天的你。", "自律給你真正的自由！", "慢慢來，比較快。這是一場馬拉松。", "你吃進去的每一口，都在塑造未來的自己。", "少吃一口，多走一步，目標就在不遠處！", "今天是變得更好的一天！", "感受身體的變化，這才是最真實的進步。"],
+            en: ["Every drop of sweat fights the fat!", "Keep going, your future self will thank you.", "Discipline equals true freedom!", "Slow and steady wins the race.", "You are what you eat.", "Eat a bit less, walk a bit more!", "Today is a great day to improve!", "Feel the changes in your body, that's true progress."]
+        };
 
         function showRandomQuote() {
-            const q = quotes[Math.floor(Math.random() * quotes.length)];
+            const list = quotes[getLang()];
+            const q = list[Math.floor(Math.random() * list.length)];
             const bubble = document.getElementById('quote-bubble');
             bubble.innerText = q;
             bubble.classList.add('show');
@@ -460,16 +524,24 @@
         function changeDate(offset) {
             const d = new Date(dateInput.value);
             d.setDate(d.getDate() + offset);
-            dateInput.value = d.toISOString().split('T')[0];
+            dateInput.value = getLocalISODate(d);
             dateInput.dispatchEvent(new Event('change'));
         }
 
+        // --- 0.25秒 貓咪腳印讀取切換 ---
         function switchTab(tabId) {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex'; // 顯示讀取動畫遮罩
+            
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-item, .nav-center').forEach(nav => nav.classList.remove('active'));
-            document.getElementById('page-' + tabId).classList.add('active');
             document.getElementById('nav-' + tabId).classList.add('active');
-            if(tabId === 'analysis') { renderAnalysisCharts(); }
+
+            setTimeout(() => {
+                overlay.style.display = 'none'; // 隱藏遮罩
+                document.getElementById('page-' + tabId).classList.add('active');
+                if(tabId === 'analysis') { renderAnalysisCharts(); }
+            }, 250); // 0.25 秒
         }
 
         function calculateBaseMetrics() {
@@ -485,43 +557,56 @@
             const tdee = Math.round(bmr * activity);
             const proteinTarget = Math.round(weight * 1.6); 
             document.getElementById('tdee-value').innerText = tdee > 0 ? tdee : 0;
-            document.getElementById('protein-target-display').innerText = proteinTarget > 0 ? proteinTarget : 0;
+            
+            document.getElementById('protein-target-text').innerHTML = (getLang() === 'zh' ? '建議蛋白質目標: ' : 'Protein Target: ') + `<span id="protein-target-display">${proteinTarget > 0 ? proteinTarget : 0}</span> g`;
+            
             return { tdee: tdee > 0 ? tdee : 0, proteinTarget: proteinTarget > 0 ? proteinTarget : 0 };
         }
 
         async function saveProfileAndGoHome() {
-            await customAlert("提示", "設定已更新！");
+            profileInputs.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
+            
+            const weightVal = parseFloat(document.getElementById('weight').value) || 67;
+            const bodyfatVal = parseFloat(document.getElementById('bodyfat').value) || '';
+            localStorage.setItem('latest_weight', weightVal);
+            localStorage.setItem('latest_bodyfat', bodyfatVal);
+            
+            saveData(); 
+            
+            await customAlert(getLang()==='zh'?"提示":"Notice", getLang()==='zh'?"設定已更新！":"Settings updated!");
             switchTab('home');
         }
 
         function renderPresets() {
+            const addTxt = getLang() === 'zh' ? '+ 新增' : '+ Add';
             const mContainer = document.getElementById('meal-presets');
             mContainer.innerHTML = mealPresets.map((m, i) => `
                 <div class="chip" onclick="applyMeal(${i})">${m.name} (${m.cal}kcal) <span class="chip-delete" onclick="event.stopPropagation(); deletePreset('meal', ${i})">×</span></div>
-            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('meal')">+ 新增</div>`;
+            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('meal')">${addTxt}</div>`;
             
             const eContainer = document.getElementById('exercise-presets');
             eContainer.innerHTML = exercisePresets.map((e, i) => `
                 <div class="chip" onclick="applyExercise(${i})">${e.name} (${e.cal}kcal) <span class="chip-delete" onclick="event.stopPropagation(); deletePreset('exercise', ${i})">×</span></div>
-            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('exercise')">+ 新增</div>`;
+            `).join('') + `<div class="chip chip-add" onclick="promptAddPreset('exercise')">${addTxt}</div>`;
         }
 
         function promptAddPreset(type) {
+            const isZh = getLang() === 'zh';
             return new Promise(resolve => {
                 modalResolve = resolve;
                 let body = type === 'meal' ? `
-                    <input type="text" id="presetName" placeholder="餐點名稱 (例: 雞胸肉+豆漿)">
-                    <input type="number" id="presetCal" placeholder="總熱量 (大卡)" style="margin-top:10px;">
-                    <input type="number" id="presetPro" placeholder="蛋白質 (克)" style="margin-top:10px;">
+                    <input type="text" id="presetName" placeholder="${isZh ? '餐點名稱' : 'Meal Name'}">
+                    <input type="number" id="presetCal" placeholder="${isZh ? '總熱量 (大卡)' : 'Calories'}" style="margin-top:10px;">
+                    <input type="number" id="presetPro" placeholder="${isZh ? '蛋白質 (克)' : 'Protein (g)'}" style="margin-top:10px;">
                 ` : `
-                    <input type="text" id="presetName" placeholder="運動名稱 (例: 羽球3小時)">
-                    <input type="number" id="presetCal" placeholder="消耗熱量 (大卡)" style="margin-top:10px;">
+                    <input type="text" id="presetName" placeholder="${isZh ? '運動名稱' : 'Workout Name'}">
+                    <input type="number" id="presetCal" placeholder="${isZh ? '消耗熱量 (大卡)' : 'Burned Calories'}" style="margin-top:10px;">
                 `;
                 const footer = `
-                    <button class="btn-primary" style="margin-top:0;" onclick="submitPreset('${type}')">新增</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">取消</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="submitPreset('${type}')">${isZh?'新增':'Add'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
                 `;
-                openCustomModal(type === 'meal' ? '新增常吃餐點' : '新增常規運動', body, footer, false);
+                openCustomModal(type === 'meal' ? (isZh?'新增常吃餐點':'Add Meal Preset') : (isZh?'新增常規運動':'Add Workout Preset'), body, footer, false);
             }).then(data => {
                 if(!data) return;
                 if(type === 'meal') { mealPresets.push(data); localStorage.setItem('meal_presets', JSON.stringify(mealPresets)); } 
@@ -533,14 +618,14 @@
         function submitPreset(type) {
             const name = document.getElementById('presetName').value;
             const cal = parseInt(document.getElementById('presetCal').value) || 0;
-            if(!name) { customAlert('錯誤', '請輸入名稱'); return; }
+            if(!name) { customAlert(getLang()==='zh'?'錯誤':'Error', getLang()==='zh'?'請輸入名稱':'Please enter a name'); return; }
             let pro = type === 'meal' ? (parseInt(document.getElementById('presetPro').value) || 0) : 0;
             closeCustomModal();
             if(modalResolve) modalResolve({ name, cal, pro });
         }
 
         async function deletePreset(type, index) {
-            const confirm = await customConfirm('刪除確認', '確定要刪除此常用項目嗎？');
+            const confirm = await customConfirm(getLang()==='zh'?'刪除確認':'Confirm Delete', getLang()==='zh'?'確定要刪除此項目嗎？':'Delete this item?');
             if(confirm) {
                 if (type === 'meal') { mealPresets.splice(index, 1); localStorage.setItem('meal_presets', JSON.stringify(mealPresets)); } 
                 else { exercisePresets.splice(index, 1); localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets)); }
@@ -549,17 +634,18 @@
         }
 
         async function applyMeal(index) {
+            const isZh = getLang() === 'zh';
             const m = mealPresets[index];
             const target = await new Promise(resolve => {
                 modalResolve = resolve;
-                const body = `要將「${m.name}」加入哪一餐？`;
+                const body = isZh ? `要將「${m.name}」加入哪一餐？` : `Add "${m.name}" to which meal?`;
                 const footer = `
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('1')">早餐</button>
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('2')">午餐</button>
-                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('3')">晚餐</button>
-                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">取消</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('1')">${isZh?'早餐':'Breakfast'}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('2')">${isZh?'午餐':'Lunch'}</button>
+                    <button class="btn-primary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve('3')">${isZh?'晚餐':'Dinner'}</button>
+                    <button class="btn-secondary" style="margin-top:0;" onclick="closeCustomModal(); if(modalResolve) modalResolve(null)">${isZh?'取消':'Cancel'}</button>
                 `;
-                openCustomModal('選擇餐期', body, footer, true);
+                openCustomModal(isZh?'選擇餐期':'Select Meal', body, footer, true);
             });
             if(!target) return;
             if(target === "1") { document.getElementById('breakfast').value = parseInt(document.getElementById('breakfast').value||0) + m.cal; }
@@ -574,9 +660,10 @@
         }
 
         async function toggleCheatDay(isCheat) {
+            const isZh = getLang() === 'zh';
             const record = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0 };
             if (isCheat) {
-                const confirm = await customConfirm("切換放縱日", "確定要把今天設為放縱日嗎？今日將不計算熱量缺口。");
+                const confirm = await customConfirm(isZh?"切換放縱日":"Enable Cheat Day", isZh?"確定要把今天設為放縱日嗎？今日將不計算熱量缺口。":"Set today as a Cheat Day? Deficit will not be calculated.");
                 if(confirm) {
                     record.isCheatDay = true; record.deficit = 0; 
                     localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
@@ -589,15 +676,58 @@
             }
         }
 
+        function updateStreak() {
+            let streak = 0;
+            let d = new Date();
+            const todayStr = getLocalISODate(d);
+            
+            const todayRec = JSON.parse(localStorage.getItem('record_' + todayStr));
+            const todayHasRecord = todayRec && (todayRec.isCheatDay || (todayRec.breakfast||0) + (todayRec.lunch||0) + (todayRec.dinner||0) > 0);
+            
+            if (todayHasRecord) streak = 1;
+            else d.setDate(d.getDate() - 1); 
+
+            while(true) {
+                const checkStr = getLocalISODate(d);
+                if(todayHasRecord && checkStr === todayStr) { d.setDate(d.getDate() - 1); continue; }
+                const rec = JSON.parse(localStorage.getItem('record_' + checkStr));
+                if (rec && (rec.isCheatDay || (rec.breakfast||0) + (rec.lunch||0) + (rec.dinner||0) > 0)) {
+                    streak++;
+                    d.setDate(d.getDate() - 1);
+                } else { break; }
+            }
+            const text = getLang() === 'zh' ? `🔥 連續 ${streak} 天` : `🔥 ${streak} Day Streak`;
+            document.getElementById('streak-badge').innerText = text;
+        }
+
         function loadData() {
             profileInputs.forEach(id => { if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id); });
-            const metrics = calculateBaseMetrics();
             
-            const currentRecord = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0, isCheatDay: false };
+            const dateStr = dateInput.value;
+            const todayStr = getLocalISODate(new Date());
+            let currentRecord = JSON.parse(localStorage.getItem('record_' + dateStr));
+            
+            if (!currentRecord) {
+                const latestWeight = parseFloat(localStorage.getItem('latest_weight')) || parseFloat(localStorage.getItem('weight')) || 67;
+                const latestBodyfat = parseFloat(localStorage.getItem('latest_bodyfat')) || parseFloat(localStorage.getItem('bodyfat')) || '';
+                
+                document.getElementById('weight').value = latestWeight;
+                document.getElementById('bodyfat').value = latestBodyfat;
+                
+                const metrics = calculateBaseMetrics();
+                currentRecord = { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0, isCheatDay: false, weight: latestWeight, bodyfat: latestBodyfat, tdee: metrics.tdee, deficit: metrics.tdee };
+                
+                if (dateStr <= todayStr) { localStorage.setItem('record_' + dateStr, JSON.stringify(currentRecord)); }
+            } else {
+                document.getElementById('weight').value = currentRecord.weight || localStorage.getItem('latest_weight') || 67;
+                document.getElementById('bodyfat').value = currentRecord.bodyfat || localStorage.getItem('latest_bodyfat') || '';
+            }
+
+            const metrics = calculateBaseMetrics();
             logInputs.forEach(id => { document.getElementById(id).value = currentRecord[id] || 0; });
 
             if (currentRecord.isCheatDay) {
-                document.getElementById('today-deficit').innerText = "放縱日";
+                document.getElementById('today-deficit').innerText = getLang() === 'zh' ? "放縱日" : "Cheat Day";
                 document.getElementById('normal-dashboard').style.display = 'none';
                 document.getElementById('home-details').style.display = 'none';
                 document.getElementById('cheat-dashboard').style.display = 'flex';
@@ -615,15 +745,17 @@
                 updateDashboard(currentRecord, metrics);
             }
             updateTotalDeficit();
+            updateStreak();
         }
 
         function updateDashboard(record, metrics) {
+            const isZh = getLang() === 'zh';
             const b = parseFloat(record.breakfast)||0, l = parseFloat(record.lunch)||0, d = parseFloat(record.dinner)||0;
             const totalEaten = b + l + d, exercise = parseFloat(record.exercise)||0, protein = parseFloat(record.protein)||0;
             const totalBudget = metrics.tdee + exercise, caloriesLeft = totalBudget - totalEaten;
             
             document.getElementById('calories-left').innerText = caloriesLeft;
-            document.getElementById('calories-eaten-text').innerText = `已吃 ${totalEaten} / 目標 ${totalBudget}`;
+            document.getElementById('calories-eaten-text').innerText = isZh ? `已吃 ${totalEaten} / 目標 ${totalBudget}` : `Eaten ${totalEaten} / Goal ${totalBudget}`;
             
             document.getElementById('protein-text-top').innerText = `${protein} / ${metrics.proteinTarget} g`;
             let proPercentage = metrics.proteinTarget > 0 ? (protein / metrics.proteinTarget) * 100 : 0;
@@ -645,23 +777,26 @@
             const ctx = document.getElementById('mealPieChart').getContext('2d');
             const hasData = (b+l+d) > 0;
             const dataVals = hasData ? [b, l, d] : [1];
-            const bgColors = hasData ? ['#dfa878', '#a38f7b', '#c86b3c'] : ['#dfd5c4'];
+            const bgColors = hasData ? ['#dfa878', '#a38f7b', '#c86b3c'] : ['var(--ring-empty)'];
+            const isZh = getLang() === 'zh';
 
             pieChartInst = new Chart(ctx, {
-                type: 'pie', data: { labels: hasData ? ['早餐', '午餐', '晚餐'] : ['無紀錄'], datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ece3d1' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (value) => hasData && value > 0 ? value : '' } } }
+                type: 'pie', data: { labels: hasData ? (isZh?['早餐','午餐','晚餐']:['Breakfast','Lunch','Dinner']) : (isZh?['無紀錄']:['No Data']), datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: getComputedStyle(document.body).getPropertyValue('--card-bg') }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: getComputedStyle(document.body).getPropertyValue('--text-main') } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (value) => hasData && value > 0 ? value : '' } } }
             });
         }
 
         function renderAnalysisCharts() {
+            Chart.defaults.color = getComputedStyle(document.body).getPropertyValue('--text-sub');
             const metrics = calculateBaseMetrics();
             const range = parseInt(document.getElementById('analysis-range').value);
+            const isZh = getLang() === 'zh';
             const labels = [], calorieIntakes = [], calorieBudgets = [], proteinIntakes = [], proteinTargets = [], weightData = [], bodyfatData = [];
             let validDays = 0, sumDeficit = 0, sumProtein = 0;
 
             for(let i = range - 1; i >= 0; i--) {
                 const dateObj = new Date(dateInput.value); dateObj.setDate(dateObj.getDate() - i);
-                const dateStr = dateObj.toISOString().split('T')[0];
+                const dateStr = getLocalISODate(dateObj);
                 
                 if (range > 30 && i % Math.ceil(range/15) !== 0 && i !== 0 && i !== range - 1) { labels.push(''); } 
                 else { labels.push(dateStr.substring(5).replace('-','/')); }
@@ -671,7 +806,7 @@
                     calorieIntakes.push(null); calorieBudgets.push(null); proteinIntakes.push(null); proteinTargets.push(null);
                 } else {
                     const eaten = rec ? (parseFloat(rec.breakfast)||0) + (parseFloat(rec.lunch)||0) + (parseFloat(rec.dinner)||0) : 0;
-                    const budget = rec ? metrics.tdee + (parseFloat(rec.exercise)||0) : metrics.tdee;
+                    const budget = rec ? (rec.tdee || metrics.tdee) + (parseFloat(rec.exercise)||0) : metrics.tdee;
                     calorieIntakes.push(eaten); calorieBudgets.push(budget);
                     proteinIntakes.push(rec ? parseFloat(rec.protein)||0 : 0); proteinTargets.push(metrics.proteinTarget);
 
@@ -685,23 +820,23 @@
             
             if (validDays > 0) {
                 const avgDeficit = Math.round(sumDeficit / validDays), avgProtein = Math.round(sumProtein / validDays);
-                if (avgDeficit > 200) calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的缺口。控制得相當不錯，繼續保持！`;
-                else if (avgDeficit >= 0) calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日缺口為 ${avgDeficit} 大卡。缺口稍微偏小，可考慮微調飲食或增加運動。`;
-                else calInsight.innerText = `在有效紀錄的 ${validDays} 天中，平均每日熱量超標 ${Math.abs(avgDeficit)} 大卡。建議多留意攝取，避免囤積。`;
+                if (avgDeficit > 200) calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日產生 ${avgDeficit} 大卡的缺口。控制得相當不錯！` : `Avg daily deficit of ${avgDeficit} kcal over ${validDays} days. Great job!`;
+                else if (avgDeficit >= 0) calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日缺口為 ${avgDeficit} 大卡。缺口偏小，可考慮微調。` : `Avg deficit of ${avgDeficit} kcal. Consider adjusting for faster results.`;
+                else calInsight.innerText = isZh ? `在有紀錄的 ${validDays} 天中，平均每日超標 ${Math.abs(avgDeficit)} 大卡。請多留意攝取！` : `Avg surplus of ${Math.abs(avgDeficit)} kcal. Watch your intake!`;
 
-                if (avgProtein >= metrics.proteinTarget) proInsight.innerText = `平均每日攝取 ${avgProtein}g 蛋白質，已達標！有助於維持肌肉量與飽足感。`;
-                else proInsight.innerText = `平均每日攝取 ${avgProtein}g 蛋白質，距離目標 (${metrics.proteinTarget}g) 還有點距離，建議多補充優質蛋白。`;
+                if (avgProtein >= metrics.proteinTarget) proInsight.innerText = isZh ? `平均攝取 ${avgProtein}g，已達標！有助維持肌肉。` : `Avg ${avgProtein}g. Target reached! Good for muscle retention.`;
+                else proInsight.innerText = isZh ? `平均攝取 ${avgProtein}g，距離目標還差 ${metrics.proteinTarget - avgProtein}g。` : `Avg ${avgProtein}g. Need ${metrics.proteinTarget - avgProtein}g more to reach target.`;
             } else {
-                calInsight.innerText = "期間內尚無足夠的飲食紀錄。"; proInsight.innerText = "期間內尚無足夠的蛋白質紀錄。";
+                calInsight.innerText = isZh ? "期間內尚無足夠的飲食紀錄。" : "Not enough diet records."; proInsight.innerText = isZh ? "期間內尚無足夠的蛋白質紀錄。" : "Not enough protein records.";
             }
 
             const validWeights = weightData.filter(v => v !== null && v > 0);
             if(validWeights.length >= 2) {
                 const diff = (validWeights[validWeights.length - 1] - validWeights[0]).toFixed(1);
-                if(diff < 0) wInsight.innerText = `期間內體重下降了 ${Math.abs(diff)} kg，缺口有確實反映在體重上！`;
-                else if(diff > 0) wInsight.innerText = `期間內體重上升了 ${diff} kg，可觀察是否為肌肉增加或正常浮動。`;
-                else wInsight.innerText = `這段期間內，體重維持平穩。`;
-            } else { wInsight.innerText = "期間內尚無足夠的體重紀錄。"; }
+                if(diff < 0) wInsight.innerText = isZh ? `體重下降 ${Math.abs(diff)} kg，缺口有確實反映在體重上！` : `Weight dropped by ${Math.abs(diff)} kg. Deficit is working!`;
+                else if(diff > 0) wInsight.innerText = isZh ? `體重上升 ${diff} kg，可觀察是否為正常浮動。` : `Weight increased by ${diff} kg.`;
+                else wInsight.innerText = isZh ? `體重維持平穩。` : `Weight remains stable.`;
+            } else { wInsight.innerText = isZh ? "期間內尚無足夠的體重紀錄。" : "Not enough weight records."; }
 
             const pointRadius = range > 30 ? 0 : 3;
             if(calLineChartInst) calLineChartInst.destroy();
@@ -710,40 +845,44 @@
 
             const ctxCal = document.getElementById('calorieLineChart').getContext('2d');
             calLineChartInst = new Chart(ctxCal, {
-                type: 'line', data: { labels: labels, datasets: [ { label: '攝取熱量', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '消耗額度', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取熱量':'Intake', data: calorieIntakes, borderColor: '#c86b3c', backgroundColor: '#c86b3c', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'消耗額度':'Budget', data: calorieBudgets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
 
             const ctxPro = document.getElementById('proteinLineChart').getContext('2d');
             proLineChartInst = new Chart(ctxPro, {
-                type: 'line', data: { labels: labels, datasets: [ { label: '攝取蛋白質', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: '目標', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'攝取蛋白質':'Intake', data: proteinIntakes, borderColor: '#5e726b', backgroundColor: '#5e726b', tension: 0.3, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'目標':'Target', data: proteinTargets, borderColor: '#a38f7b', borderDash: [5, 5], fill: false, tension: 0, pointRadius: pointRadius, spanGaps: true } ] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } } } }
             });
 
             const ctxWeight = document.getElementById('weightLineChart').getContext('2d');
+            const mainColor = getComputedStyle(document.body).getPropertyValue('--text-main');
             weightLineChartInst = new Chart(ctxWeight, {
-                type: 'line', data: { labels: labels, datasets: [ { label: '體重(kg)', yAxisID: 'y', data: weightData, borderColor: '#4a3b32', backgroundColor: '#4a3b32', tension: 0.2, pointRadius: pointRadius, spanGaps: true }, { label: '體脂(%)', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: pointRadius, spanGaps: true } ] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } }, y: { type: 'linear', display: true, position: 'left', title: {display: true, text: '體重 (kg)'} }, y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: '體脂 (%)'} } } }
+                type: 'line', data: { labels: labels, datasets: [ { label: isZh?'體重(kg)':'Weight', yAxisID: 'y', data: weightData, borderColor: mainColor, backgroundColor: mainColor, tension: 0.2, pointRadius: pointRadius, spanGaps: true }, { label: isZh?'體脂(%)':'Body Fat', yAxisID: 'y1', data: bodyfatData, borderColor: '#c86b3c', borderDash: [3, 3], fill: false, tension: 0.2, pointRadius: pointRadius, spanGaps: true } ] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { ticks: { autoSkip: false } }, y: { type: 'linear', display: true, position: 'left', title: {display: true, text: isZh?'體重 (kg)':'Weight'} }, y1: { type: 'linear', display: true, position: 'right', grid: {drawOnChartArea: false}, title: {display: true, text: isZh?'體脂 (%)':'Body Fat'} } } }
             });
         }
 
         function saveData() {
-            profileInputs.forEach(id => localStorage.setItem(id, document.getElementById(id).value));
             const metrics = calculateBaseMetrics();
-            
             const record = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { isCheatDay: false };
             logInputs.forEach(id => { record[id] = parseFloat(document.getElementById(id).value) || 0; });
             
-            record.weight = parseFloat(document.getElementById('weight').value) || 0;
-            record.bodyfat = parseFloat(document.getElementById('bodyfat').value) || 0;
+            const weightVal = parseFloat(document.getElementById('weight').value) || 0;
+            const bodyfatVal = parseFloat(document.getElementById('bodyfat').value) || '';
+            if (weightVal > 0) localStorage.setItem('latest_weight', weightVal);
+            if (bodyfatVal > 0) localStorage.setItem('latest_bodyfat', bodyfatVal);
+
+            record.weight = weightVal;
+            record.bodyfat = bodyfatVal;
             record.tdee = metrics.tdee;
             record.deficit = (record.tdee + record.exercise) - (record.breakfast + record.lunch + record.dinner);
             localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
             loadData();
             
             const btn = document.getElementById('save-btn');
-            const originalText = "儲存紀錄";
-            btn.innerText = "儲存成功";
+            const originalText = getLang() === 'zh' ? "儲存紀錄" : "Save";
+            btn.innerText = getLang() === 'zh' ? "儲存成功" : "Saved!";
             btn.style.background = '#5e726b';
             setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent-color)'; switchTab('home'); }, 1000);
         }
@@ -758,6 +897,7 @@
         }
 
         function openHistoryModal() {
+            const isZh = getLang() === 'zh';
             let records = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
@@ -770,28 +910,30 @@
 
             let bodyHTML = '<div class="history-list">';
             if(records.length === 0) {
-                bodyHTML += '<div style="text-align:center; padding: 20px; color: var(--text-sub);">尚無紀錄</div>';
+                bodyHTML += `<div style="text-align:center; padding: 20px; color: var(--text-sub);">${isZh?'尚無紀錄':'No Records'}</div>`;
             } else {
                 records.forEach(r => {
                     const isNeg = r.deficit < 0;
-                    const defText = r.isCheat ? "放縱日" : (r.deficit > 0 ? '+'+r.deficit : r.deficit) + ' kcal';
+                    const defText = r.isCheat ? (isZh?"放縱日":"Cheat Day") : (r.deficit > 0 ? '+'+r.deficit : r.deficit) + ' kcal';
                     bodyHTML += `<div class="history-item"><span>${r.date.replace(/-/g, '/')}</span> <span class="history-deficit ${isNeg && !r.isCheat ? 'negative' : ''}">${defText}</span></div>`;
                 });
             }
             bodyHTML += '</div>';
-            openCustomModal('每日熱量缺口紀錄', bodyHTML, '', true);
+            openCustomModal(isZh?'每日熱量缺口紀錄':'Daily Deficit History', bodyHTML, '', true);
         }
 
         async function exportData() {
-            if (localStorage.length === 0) { await customAlert("提示", "目前沒有資料可以匯出"); return; }
+            const isZh = getLang() === 'zh';
+            if (localStorage.length === 0) { await customAlert(isZh?"提示":"Notice", isZh?"目前沒有資料可以匯出":"No data to export"); return; }
             const data = JSON.stringify(localStorage);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `熱量紀錄備份_${new Date().toISOString().split('T')[0]}.json`;
+            const a = document.createElement('a'); a.href = url; a.download = `熱量紀錄備份_${getLocalISODate(new Date())}.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
         }
 
         function importData(event) {
+            const isZh = getLang() === 'zh';
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -800,9 +942,9 @@
                     const data = JSON.parse(e.target.result);
                     localStorage.clear();
                     for (let key in data) { localStorage.setItem(key, data[key]); }
-                    await customAlert("提示", "資料還原成功");
+                    await customAlert(isZh?"提示":"Success", isZh?"資料還原成功":"Data restored successfully");
                     loadData(); event.target.value = ''; 
-                } catch (error) { await customAlert("錯誤", "檔案格式錯誤，匯入失敗"); }
+                } catch (error) { await customAlert(isZh?"錯誤":"Error", isZh?"檔案格式錯誤，匯入失敗":"Invalid file format"); }
             };
             reader.readAsText(file);
         }
