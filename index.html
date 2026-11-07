@@ -35,14 +35,44 @@
         .page.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 頂部 Header 與 日期切換 */
+        /* 頂部 Header 與 泡泡提示 */
         .global-header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px 20px 10px 20px; max-width: 500px; margin: 0 auto;
         }
-        .global-header h1 { margin: 0; font-size: 1.8em; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .global-header h1:active { opacity: 0.7; }
         
+        .greeting-container { position: relative; display: flex; align-items: center; }
+        .greeting-container h1 { margin: 0; font-size: 1.8em; cursor: pointer; transition: opacity 0.2s; }
+        .greeting-container h1:active { opacity: 0.6; }
+        
+        /* 鼓勵語泡泡設計 */
+        .quote-bubble {
+            position: absolute;
+            top: 120%;
+            left: 0;
+            background: var(--accent-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 16px;
+            border-top-left-radius: 0; /* 氣球尖角效果 */
+            font-size: 0.9em;
+            font-weight: bold;
+            line-height: 1.4;
+            width: max-content;
+            max-width: 250px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+        .quote-bubble.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
         .date-control { display: flex; align-items: center; justify-content: center; }
         .date-nav-btn { background: none; border: none; font-size: 1.2em; color: var(--accent-color); cursor: pointer; padding: 5px 10px; font-weight: bold; outline: none; }
         .date-nav-btn:active { opacity: 0.5; }
@@ -95,7 +125,7 @@
         .range-select { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-main); font-weight: bold; outline: none; }
         .insight-box { background: var(--bg-color); padding: 12px; border-radius: 8px; font-size: 0.9em; color: var(--text-sub); line-height: 1.5; margin-top: 10px; }
 
-        /* 全域 Modal 遮罩 (包含歷史紀錄與自訂提示視窗) */
+        /* 全域 Modal 遮罩 */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--bg-color); width: 100%; max-width: 360px; max-height: 75vh; border-radius: 20px; padding: 25px; display: flex; flex-direction: column; box-sizing: border-box; }
@@ -141,7 +171,11 @@
 <body>
 
     <div class="global-header">
-        <h1 id="greeting" onclick="showRandomQuote()">晚安 <span style="font-size: 0.8em; margin-left: 2px;">💬</span></h1>
+        <div class="greeting-container">
+            <h1 id="greeting" onclick="showRandomQuote()">晚安</h1>
+            <!-- 隱藏的泡泡元件 -->
+            <div id="quote-bubble" class="quote-bubble"></div>
+        </div>
         <div class="date-control">
             <button class="date-nav-btn" onclick="changeDate(-1)">❮</button>
             <input type="date" id="date" class="date-picker">
@@ -163,7 +197,7 @@
                 <label>年齡</label><input type="number" id="age" value="22">
                 <label>身高 (cm)</label><input type="number" id="height" value="173">
                 <label>體重 (kg)</label><input type="number" id="weight" value="67">
-                <label>體脂率 (%)</label><input type="number" id="bodyfat" value="22" placeholder="選填">
+                <label>體脂率 (%)</label><input type="number" id="bodyfat" value="" placeholder="選填 (有量再填)">
                 <label>活動係數</label>
                 <select id="activity">
                     <option value="1.2">久坐 (幾乎不運動)</option>
@@ -297,7 +331,7 @@
         </div>
     </div>
 
-    <!-- 歷史紀錄與自訂提示視窗 (取代 alert/confirm/prompt) -->
+    <!-- 歷史紀錄與自訂提示視窗 -->
     <div class="modal-overlay" id="customModalOverlay" onclick="closeCustomModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header" id="customModalHeader">
@@ -340,13 +374,10 @@
         const profileInputs = ['gender', 'age', 'height', 'weight', 'bodyfat', 'activity'];
         const logInputs = ['breakfast', 'lunch', 'dinner', 'exercise', 'protein'];
         
-        let pieChartInst = null;
-        let calLineChartInst = null;
-        let proLineChartInst = null;
-        let weightLineChartInst = null;
-
+        let pieChartInst = null, calLineChartInst = null, proLineChartInst = null, weightLineChartInst = null;
         let mealPresets = JSON.parse(localStorage.getItem('meal_presets')) || [];
         let exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
+        let quoteTimeout = null;
 
         Chart.defaults.color = '#8d7b68';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
@@ -361,13 +392,8 @@
             
             const header = document.getElementById('customModalHeader');
             const closeBtn = document.getElementById('customModalCloseBtn');
-            if(showClose) {
-                header.classList.add('has-close');
-                closeBtn.style.display = 'block';
-            } else {
-                header.classList.remove('has-close');
-                closeBtn.style.display = 'none';
-            }
+            if(showClose) { header.classList.add('has-close'); closeBtn.style.display = 'block'; } 
+            else { header.classList.remove('has-close'); closeBtn.style.display = 'none'; }
             
             document.getElementById('customModalOverlay').classList.add('active');
         }
@@ -397,7 +423,7 @@
             });
         }
 
-        // --- 初始化與基礎邏輯 ---
+        // --- 初始化 ---
         window.onload = () => {
             const today = new Date().toISOString().split('T')[0];
             dateInput.value = today;
@@ -412,7 +438,7 @@
             let text = "晚安";
             if(hour < 11) text = "早安";
             else if(hour < 17) text = "午安";
-            greetingEl.innerHTML = text + ' <span style="font-size: 0.8em; margin-left: 2px;">💬</span>';
+            greetingEl.innerText = text;
         }
 
         const quotes = [
@@ -424,7 +450,11 @@
 
         function showRandomQuote() {
             const q = quotes[Math.floor(Math.random() * quotes.length)];
-            customAlert("💡 每日鼓勵", `<div style="font-size:1.1em; color:var(--text-main); font-weight:bold; margin: 10px 0;">「${q}」</div>`);
+            const bubble = document.getElementById('quote-bubble');
+            bubble.innerText = q;
+            bubble.classList.add('show');
+            clearTimeout(quoteTimeout);
+            quoteTimeout = setTimeout(() => { bubble.classList.remove('show'); }, 3000);
         }
 
         function changeDate(offset) {
@@ -464,7 +494,6 @@
             switchTab('home');
         }
 
-        // --- 快捷鍵邏輯 ---
         function renderPresets() {
             const mContainer = document.getElementById('meal-presets');
             mContainer.innerHTML = mealPresets.map((m, i) => `
@@ -495,11 +524,8 @@
                 openCustomModal(type === 'meal' ? '新增常吃餐點' : '新增常規運動', body, footer, false);
             }).then(data => {
                 if(!data) return;
-                if(type === 'meal') {
-                    mealPresets.push(data); localStorage.setItem('meal_presets', JSON.stringify(mealPresets));
-                } else {
-                    exercisePresets.push(data); localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets));
-                }
+                if(type === 'meal') { mealPresets.push(data); localStorage.setItem('meal_presets', JSON.stringify(mealPresets)); } 
+                else { exercisePresets.push(data); localStorage.setItem('exercise_presets', JSON.stringify(exercisePresets)); }
                 renderPresets();
             });
         }
@@ -547,14 +573,12 @@
             document.getElementById('exercise').value = parseInt(document.getElementById('exercise').value||0) + e.cal;
         }
 
-        // --- 放縱日邏輯 ---
         async function toggleCheatDay(isCheat) {
             const record = JSON.parse(localStorage.getItem('record_' + dateInput.value)) || { breakfast: 0, lunch: 0, dinner: 0, exercise: 0, protein: 0 };
             if (isCheat) {
                 const confirm = await customConfirm("切換放縱日", "確定要把今天設為放縱日嗎？今日將不計算熱量缺口。");
                 if(confirm) {
-                    record.isCheatDay = true;
-                    record.deficit = 0; 
+                    record.isCheatDay = true; record.deficit = 0; 
                     localStorage.setItem('record_' + dateInput.value, JSON.stringify(record));
                     loadData();
                 }
@@ -565,7 +589,6 @@
             }
         }
 
-        // --- 資料載入與計算 ---
         function loadData() {
             profileInputs.forEach(id => { if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id); });
             const metrics = calculateBaseMetrics();
@@ -578,7 +601,6 @@
                 document.getElementById('normal-dashboard').style.display = 'none';
                 document.getElementById('home-details').style.display = 'none';
                 document.getElementById('cheat-dashboard').style.display = 'flex';
-                
                 document.getElementById('record-form-container').style.display = 'none';
                 document.getElementById('cheat-view-container').style.display = 'block';
             } else {
@@ -588,7 +610,6 @@
                 document.getElementById('normal-dashboard').style.display = 'flex';
                 document.getElementById('home-details').style.display = 'block';
                 document.getElementById('cheat-dashboard').style.display = 'none';
-
                 document.getElementById('record-form-container').style.display = 'block';
                 document.getElementById('cheat-view-container').style.display = 'none';
                 updateDashboard(currentRecord, metrics);
@@ -612,7 +633,6 @@
 
             let percentage = totalBudget > 0 ? (totalEaten / totalBudget) * 100 : 0;
             if (percentage > 100) percentage = 100;
-            
             const ring = document.getElementById('calorie-ring');
             ring.style.setProperty('--p', percentage + '%');
             ring.style.background = caloriesLeft < 0 ? `conic-gradient(#d9534f var(--p, 0%), var(--ring-empty) 0)` : `conic-gradient(var(--accent-color) var(--p, 0%), var(--ring-empty) 0)`;
@@ -628,8 +648,7 @@
             const bgColors = hasData ? ['#dfa878', '#a38f7b', '#c86b3c'] : ['#dfd5c4'];
 
             pieChartInst = new Chart(ctx, {
-                type: 'pie',
-                data: { labels: hasData ? ['早餐', '午餐', '晚餐'] : ['無紀錄'], datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ece3d1' }] },
+                type: 'pie', data: { labels: hasData ? ['早餐', '午餐', '晚餐'] : ['無紀錄'], datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ece3d1' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' }, datalabels: { color: '#fff', font: { weight: 'bold', size: 14 }, formatter: (value) => hasData && value > 0 ? value : '' } } }
             });
         }
