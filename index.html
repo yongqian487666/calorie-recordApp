@@ -141,6 +141,11 @@
         .cal-cell.today { background: var(--accent-sub); color: white; }
         .cal-cell.selected { background: var(--accent-color); color: white; }
 
+        /* 性別暖色系雙按鈕切換 UI */
+        .gender-toggle-group { display: flex; gap: 10px; margin-top: 5px; margin-bottom: 12px; }
+        .gender-opt { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .gender-opt.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+
         /* 表單與按鈕 */
         label { display: block; margin-top: 15px; font-size: 0.9em; font-weight: bold; color: var(--text-sub); }
         input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
@@ -210,7 +215,7 @@
 
     <div id="loading-overlay"><div class="loader"></div></div>
 
-    <div class="container" id="swipe-area">
+    <div class="container">
         <!-- 第1頁：身體 -->
         <div id="page-tdee" class="page">
             <h2 style="margin-top:0;" class="lang-txt" data-zh="我的身體數值" data-en="My Body Metrics">我的身體數值</h2>
@@ -464,7 +469,6 @@
         const dateInput = document.getElementById('date');
         const profileInputs = ['gender', 'age', 'height', 'activity'];
         const logInputs = ['breakfast', 'lunch', 'dinner', 'snacks', 'exercise', 'protein'];
-        const tabsOrder = ['tdee', 'home', 'record', 'analysis', 'settings'];
         
         let pieChartInst = null, calLineChartInst = null, proLineChartInst = null, weightLineChartInst = null;
         let mealPresets = JSON.parse(localStorage.getItem('meal_presets')) || [];
@@ -609,13 +613,19 @@
             if(type === 'analysis-range') renderAnalysisCharts();
         }
 
-        // --- 基本資料無框編輯 ---
+        // --- 基本資料無框編輯 (暖色系性別雙按鈕) ---
         function updateBasicInfoUI() {
             const isZh = getLang() === 'zh';
             const g = document.getElementById('gender').value === 'M' ? (isZh?'男':'M') : (isZh?'女':'F');
             const a = document.getElementById('age').value;
             const h = document.getElementById('height').value;
             document.getElementById('basic-info-display').innerText = `${g} / ${a} ${isZh?'歲':'yo'} / ${h} cm`;
+        }
+
+        function selectTempGender(val) {
+            document.getElementById('tempGender').value = val;
+            document.getElementById('gender-opt-M').classList.toggle('active', val === 'M');
+            document.getElementById('gender-opt-F').classList.toggle('active', val === 'F');
         }
 
         function promptEditBasicInfo() {
@@ -627,10 +637,11 @@
                 const currH = document.getElementById('height').value;
                 let body = `
                     <label style="margin-top:0">${isZh?'性別':'Gender'}</label>
-                    <select id="tempGender" style="width:100%; margin-bottom:10px;">
-                        <option value="M" ${currG==='M'?'selected':''}>${isZh?'男':'Male'}</option>
-                        <option value="F" ${currG==='F'?'selected':''}>${isZh?'女':'Female'}</option>
-                    </select>
+                    <input type="hidden" id="tempGender" value="${currG}">
+                    <div class="gender-toggle-group">
+                        <button type="button" id="gender-opt-M" class="gender-opt ${currG==='M'?'active':''}" onclick="selectTempGender('M')">${isZh?'男性':'Male'}</button>
+                        <button type="button" id="gender-opt-F" class="gender-opt ${currG==='F'?'active':''}" onclick="selectTempGender('F')">${isZh?'女性':'Female'}</button>
+                    </div>
                     <label style="margin-top:0">${isZh?'年齡':'Age'}</label>
                     <input type="number" id="tempAge" value="${currA}" style="margin-bottom:10px;">
                     <label style="margin-top:0">${isZh?'身高 (cm)':'Height (cm)'}</label>
@@ -646,6 +657,9 @@
                     document.getElementById('gender').value = data.g;
                     document.getElementById('age').value = data.a;
                     document.getElementById('height').value = data.h;
+                    localStorage.setItem('gender', data.g);
+                    localStorage.setItem('age', data.a);
+                    localStorage.setItem('height', data.h);
                     updateBasicInfoUI();
                     calculateBaseMetrics();
                 }
@@ -722,29 +736,6 @@
 
         // --- Q&A ---
         function toggleQA(el) { el.classList.toggle('active'); }
-
-        // --- 左右滑動手勢 (Swipe) ---
-        let touchstartX = 0, touchendX = 0;
-        const swipeArea = document.getElementById('swipe-area');
-        
-        swipeArea.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; }, false);
-        swipeArea.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, false);
-
-        function handleSwipe() {
-            const diff = touchstartX - touchendX;
-            if (Math.abs(diff) > 50) { // 滑動距離超過 50px 才觸發
-                const currentTab = document.querySelector('.nav-item.active, .nav-center.active').id.replace('nav-', '');
-                const currentIndex = tabsOrder.indexOf(currentTab);
-                if (diff > 0 && currentIndex < tabsOrder.length - 1) {
-                    switchTab(tabsOrder[currentIndex + 1]); // 左滑去下一頁
-                } else if (diff < 0 && currentIndex > 0) {
-                    switchTab(tabsOrder[currentIndex - 1]); // 右滑回上一頁
-                }
-            }
-        }
 
         // --- 自訂日曆 Grid ---
         let calCurrentMonth = new Date();
@@ -1140,7 +1131,6 @@
                 else wInsight.innerText = isZh ? `體重維持平穩。` : `Weight remains stable.`;
             } else { wInsight.innerText = isZh ? "期間內尚無足夠的體重紀錄。" : "Not enough weight records."; }
 
-            // 自動跳躍標籤以防重疊
             const xTicksConfig = { autoSkip: true, maxTicksLimit: 7, maxRotation: 45, minRotation: 45 };
 
             if(calLineChartInst) calLineChartInst.destroy();
@@ -1228,8 +1218,24 @@
 
         async function exportData() {
             const isZh = getLang() === 'zh';
-            const backupObj = { ...localStorage };
-            if (Object.keys(backupObj).length === 0) { await customAlert(isZh?"提示":"Notice", isZh?"目前沒有資料可以匯出":"No data to export"); return; }
+            const backupObj = {
+                meal_presets: localStorage.getItem('meal_presets') || "[]",
+                exercise_presets: localStorage.getItem('exercise_presets') || "[]",
+                nickname: localStorage.getItem('nickname') || "匿名者",
+                latest_weight: localStorage.getItem('latest_weight') || "",
+                latest_bodyfat: localStorage.getItem('latest_bodyfat') || "",
+                app_theme: localStorage.getItem('app_theme') || "light",
+                app_lang: localStorage.getItem('app_lang') || "zh",
+                gender: localStorage.getItem('gender') || "M",
+                age: localStorage.getItem('age') || "22",
+                height: localStorage.getItem('height') || "173",
+                weight: localStorage.getItem('weight') || "67",
+                activity: localStorage.getItem('activity') || "1.2",
+            };
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('record_')) { backupObj[key] = localStorage.getItem(key); }
+            }
             const data = JSON.stringify(backupObj);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1247,9 +1253,12 @@
                     const data = JSON.parse(e.target.result);
                     localStorage.clear();
                     for (let key in data) { localStorage.setItem(key, data[key]); }
+                    mealPresets = JSON.parse(localStorage.getItem('meal_presets')) || [];
+                    exercisePresets = JSON.parse(localStorage.getItem('exercise_presets')) || [];
                     await customAlert(isZh?"提示":"Success", isZh?"資料還原成功":"Data restored successfully");
                     initSettings();
                     updateNicknameUI();
+                    renderPresets();
                     loadData(); 
                     event.target.value = ''; 
                 } catch (error) { await customAlert(isZh?"錯誤":"Error", isZh?"檔案格式錯誤，匯入失敗":"Invalid file format"); }
